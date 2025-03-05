@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
-
-from src.models.ICertificateMetadata import ICertificateMetadata
+import sys
+sys.path.append("src")
+from models.ICertificateMetadata import ICertificateMetadata
 
 
 class CertificateMetadata(ICertificateMetadata):

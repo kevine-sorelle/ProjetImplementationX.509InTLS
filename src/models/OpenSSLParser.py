@@ -2,8 +2,9 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from datetime import datetime
 from abc import ABC, abstractmethod
-
-from src.models.ICertificateParser import ICertificateParser
+import sys
+sys.path.append("src")
+from models.ICertificateParser import ICertificateParser
 
 
 class OpenSSLParser(ICertificateParser):

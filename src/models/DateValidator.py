@@ -2,7 +2,9 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from datetime import datetime, timezone
 from abc import ABC, abstractmethod
-from src.models.certificateValidor import ICertificateValidator
+import sys
+sys.path.append("src")
+from models.certificateValidor import ICertificateValidator
 
 
 class DateValidator(ICertificateValidator):

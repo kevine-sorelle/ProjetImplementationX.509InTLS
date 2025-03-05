@@ -2,8 +2,9 @@ from abc import ABC, abstractmethod
 from cryptography import x509
 import ssl
 import socket
-
-from src.models.ICertificateFetcher import ICertificateFetcher
+import sys
+sys.path.append("src")
+from models.ICertificateFetcher import ICertificateFetcher
 
 
 class SSLCertificateFetcher(ICertificateFetcher):

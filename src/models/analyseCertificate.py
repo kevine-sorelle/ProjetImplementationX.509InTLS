@@ -1,12 +1,13 @@
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from datetime import datetime
-
-from src.models.ICertificateMetadata import ICertificateMetadata
-from src.models.ICertificateParser import ICertificateParser
-from src.models.certificateValidor import ICertificateValidator
-from src.models.getCertificate import GetCertificate
-from src.enums.message import CertificateMessage
+import sys
+sys.path.append("src")
+from models.ICertificateMetadata import ICertificateMetadata
+from models.ICertificateParser import ICertificateParser
+from models.certificateValidor import ICertificateValidator
+from models.getCertificate import GetCertificate
+from enums.message import CertificateMessage
 
 
 class AnalyseCertificate:
