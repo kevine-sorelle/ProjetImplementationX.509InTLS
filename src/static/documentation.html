@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Validator - Documentation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2 { color: #333; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; }
+        .container { max-width: 800px; margin: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Certificate Validator - Documentation</h1>
+
+        <h2>Introduction</h2>
+        <p>Certificate Validator est une application web basée sur Flask conçue pour générer, valider et visualiser des certificats X.509 incluant des clés publiques de mécanisme d'encapsulation de clé (KEM).</p>
+
+        <h2>Fonctionnalités</h2>
+        <ul>
+            <li>Générer des certificats X.509 avec des clés publiques KEM</li>
+            <li>Extraire et afficher les détails des certificats</li>
+            <li>Encapsuler et décapsuler des clés secrètes partagées</li>
+            <li>Télécharger les certificats générés</li>
+        </ul>
+
+        <h2>Installation</h2>
+        <pre>
+        git clone https://github.com/your-repo/certificate-validator.git
+        cd certificate-validator
+        pip install -r requirements.txt
+        python app.py
+        </pre>
+
+        <h2>Endpoints API</h2>
+        <ul>
+            <li><strong>GET /</strong> - Afficher les détails du certificat et les opérations KEM</li>
+            <li><strong>GET /download-cert</strong> - Télécharger le certificat X.509 généré</li>
+        </ul>
+
+        <h2>Utilisation</h2>
+        <p>Une fois l'application en cours d'exécution, ouvrez <code>http://127.0.0.1:5000/</code> dans votre navigateur pour visualiser et gérer les certificats.</p>
+
+        <h2>Licence</h2>
+        <p>Licence MIT - Libre d'utilisation et de modification.</p>
+    </div>
+</body>
+</html>
