@@ -1,0 +1,31 @@
+{% extends "partials/base.html" %} {% block content %}
+<h1 class="mb-4">Collecte des informations serveur</h1>
+
+<form method="post" class="mb-4">
+    <div class="mb-3">
+        <label for="hostname" class="form-label">Nom ou Adresse du serveur</label>
+        <input type="text" step="0.1" class="form-control" id="hostname" name="hostname" placeholder="Enter domain (e.g. google.com)" required>
+    </div>
+    <div class="mb-3">
+        <label for="port" class="form-label">Numéro de port</label>
+        <input type="number" step="0.1" class="form-control" id="port" name="port" placeholder="Enter port number (e.g. 443)">
+    </div>
+    <button type="submit" class="btn btn-primary">Valider</button>
+</form>
+
+{% if cert_info %}
+<div class="mt-4">
+    <h2>Resultat pour le serveur {{ cert_info.hostname }}</h2>
+    {% for key, message in cert_info.items() %}
+        {% if key == "hostname" %}
+            <div class="alert alert-info" role="alert">Hostname: {{ message }} </div>
+        {% elif key == "valid" %}
+            <div class="alert {{ "success" if message else "alert-danger" }}" role="alert">Valid : {{ "Yes" if message else "No" }}</div>
+        {% elif key == "issuer" %}
+            <div class="alert alert-primary" role="alert">Issuer: {{ message }}</div>
+        {% else %}
+            <div class="alert" role="alert">{{ key }}: {{ message }}</div>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %} {% endblock %}

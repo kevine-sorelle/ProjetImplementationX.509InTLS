@@ -1,8 +1,10 @@
 import ssl
 import socket
-from src.models.ICertificateFetcher import ICertificateFetcher
-from src.models.SSLCertificateFetcher import SSLCertificateFetcher
-from src.models.SSLConnectionManager import SSLConnectionManager
+import sys
+sys.path.append("src")
+from models.ICertificateFetcher import ICertificateFetcher
+from models.SSLCertificateFetcher import SSLCertificateFetcher
+from models.SSLConnectionManager import SSLConnectionManager
 
 
 class GetCertificate:
