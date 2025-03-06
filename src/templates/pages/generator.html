@@ -1,0 +1,42 @@
+{% extends "partials/base.html" %} {% block content %}
+<h1 class="mb-4">KEM X.509 Viewer</h1>
+<div class="container mt-4">
+  <!-- Vue d'ensemble -->
+  <div class="row mb-4">
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Vue d'ensemble</h5>
+          <div class="row">
+            <div class="col-md-3">
+              <div class="alert alert-info">Serveur: google.com</div>
+            </div>
+            <div class="col-md-3">
+              <div class="alert alert-warning">Nombres de certificats invalides: 2</div>
+            </div>
+            <div class="col-md-3">
+              <div class="alert alert-success">Emetteur: CN=*.google.com</div>
+            </div>
+            <div class="col-md-3">
+              <div class="alert alert-primary">Taille de la clé: 2048</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container">
+    <h2>X.509 Certificate with KEM Public Key</h2>
+    <pre>{{ cert_pem }}</pre>
+
+    <h3>Extracted Public Key</h3>
+    <pre>{{ public_key }}</pre>
+
+    <h3>Encapsulated Secret Key</h3>
+    <pre>{{ encapsulated_key }}</pre>
+
+    <h3>Decapsulated Secret Key</h3>
+    <pre>{{ decapsulated_key }}</pre>
+</div>
+{% endblock %}
