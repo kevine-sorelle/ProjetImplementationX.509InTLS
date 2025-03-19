@@ -34,3 +34,4 @@ class CertificateMetadata(ICertificateMetadata):
             "valid_from": valid_from,
             "valid_to": valid_to
         }
+

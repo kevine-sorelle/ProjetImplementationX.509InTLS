@@ -5,7 +5,7 @@ import sys
 sys.path.append("src")
 from models.ICertificateMetadata import ICertificateMetadata
 from models.ICertificateParser import ICertificateParser
-from models.certificateValidor import ICertificateValidator
+from models.certificateValidator import ICertificateValidator
 from models.getCertificate import GetCertificate
 from enums.message import CertificateMessage
 

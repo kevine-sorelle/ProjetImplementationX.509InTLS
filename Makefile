@@ -1,11 +1,5 @@
 # Détection de Python
-ifeq ($(shell python3 --version >/dev/null 2>&1; echo $$?),0)
-    PYTHON = python3
-else ifeq ($(shell python --version >/dev/null 2>&1; echo $$?),0)
-    PYTHON = python
-else
-    $(error "Python non trouvé. Veuillez installer Python 3.x")
-endif
+PYTHON = python
 
 # Variables d'environnement
 VENV = .venv

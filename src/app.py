@@ -31,14 +31,13 @@ if not os.path.exists(CERT_PATH):
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    cert_info = None
+    cert_info = {}
     try:
         if request.method == "POST":
                 hostname = request.form["hostname"]
                 port = request.form["port"]
                 connection = SSLConnectionManager(hostname, port)
                 fetcher = SSLCertificateFetcher()
-                vali = DateValidator()
                 parser = OpenSSLParser()
                 validator = DateValidator()
                 meta = CertificateMetadata()
@@ -50,7 +49,8 @@ def home():
         else:
             cert_info = {}
     except Exception as e:
-        cert_info.pop("Invalid", f"Erreur: {str(e)}")
+        # ajout de l'information d'erreur pour cert_info
+        cert_info["Invalid"] = f"Erreur: {str(e)}"
     return render_template("pages/index.html", cert_info=cert_info)
 
 @app.route("/generator")
