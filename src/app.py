@@ -1,9 +1,10 @@
 from cryptography.hazmat.primitives import serialization
 from flask import Flask, request, render_template, send_file
 import sys
-
-
 sys.path.append("src")
+from models.validatorInterface import ValidatorInterface
+
+
 
 from models.KEM import KEM
 from models.certificateManager import CertificateManager
@@ -29,6 +30,7 @@ CERT_PATH = os.path.join(os.path.dirname(__file__), "kem_cert.pem")
 if not os.path.exists(CERT_PATH):
     cert_manager.createSelfSignedCert("kem-test.local", CERT_PATH)
 
+
 @app.route("/", methods=["GET", "POST"])
 def home():
     cert_info = {}
@@ -38,12 +40,9 @@ def home():
                 port = request.form["port"]
                 connection = SSLConnectionManager(hostname, port)
                 fetcher = SSLCertificateFetcher()
-                parser = OpenSSLParser()
-                validator = DateValidator()
-                meta = CertificateMetadata()
-                analyser = AnalyseCertificate(parser, validator, meta)
-                get_certificate = GetCertificate(connection, fetcher)
-                my_certificate = get_certificate.getCertificate()
+                certificate_retriever = GetCertificate(connection, fetcher)
+                analyser = AnalyseCertificate()
+                my_certificate = certificate_retriever.getCertificate()
                 data = analyser.analyseCertificate(my_certificate)
                 cert_info = {"hostname": hostname, "valid": data["is_valid"], "issuer": data["issuer"], "subject": data["subject"]}
         else:

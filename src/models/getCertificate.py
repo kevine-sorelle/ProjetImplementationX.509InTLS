@@ -2,13 +2,12 @@ import ssl
 import socket
 import sys
 sys.path.append("src")
+from models.IConnectionManager import IConnectionManager
 from models.ICertificateFetcher import ICertificateFetcher
-from models.SSLCertificateFetcher import SSLCertificateFetcher
-from models.SSLConnectionManager import SSLConnectionManager
 
 
 class GetCertificate:
-    def __init__(self, connection: SSLConnectionManager, fetcher: SSLCertificateFetcher):
+    def __init__(self, connection: IConnectionManager, fetcher: ICertificateFetcher):
         self._connection = connection
         self._fetcher = fetcher
 
@@ -19,7 +18,7 @@ class GetCertificate:
 
     # Définit un nouveau serveur
     @connection.setter
-    def connection(self, newConnection):
+    def connection(self, newConnection: IConnectionManager):
         self._connection = newConnection
 
     # Obtient le numéro de port
@@ -29,7 +28,7 @@ class GetCertificate:
 
     # Définit un nouveau port pour le serveur
     @fetcher.setter
-    def fetcher(self, newFetcher):
+    def fetcher(self, newFetcher: ICertificateFetcher):
         self._fetcher = newFetcher
 
     def getCertificate(self):

@@ -1,4 +1,9 @@
-class SSLConnectionManager:
+import sys
+sys.path.append("src")
+from models.IConnectionManager import IConnectionManager
+
+
+class SSLConnectionManager(IConnectionManager):
     """Handles SSL connection settings and hostname/port storage."""
 
     def __init__(self, hostname, port):

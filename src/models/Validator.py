@@ -1,12 +1,12 @@
-from cryptography import x509
+import sys
+sys.path.append("src")
+from models.validatorInterface import ValidatorInterface
 
 
 class Validator:
-    def __init__(self, name, value, type, certificate):
-        self.name = name
-        self.value = value
-        self.type = type
-        self.certificate = certificate
 
-    def validate(self, cert: x509.Certificate):
-        pass
+   def __init__(self, validator: ValidatorInterface):
+       self.validator = validator
+
+   def validate(self, certificate):
+       return self.validator.validate(certificate)
