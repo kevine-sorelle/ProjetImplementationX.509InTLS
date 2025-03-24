@@ -1,17 +1,8 @@
 import pytest
-from cryptography import x509
-from cryptography.hazmat.backends import default_backend
 import datetime
-
-from src.models.DateValidator import DateValidator
-from src.models.IssuerValidator import IssuerValidator
-from src.models.OpenSSLParser import OpenSSLParser
 from src.models.SSLCertificateFetcher import SSLCertificateFetcher
 from src.models.SSLConnectionManager import SSLConnectionManager
-from src.models.Validator import Validator
-from src.models.ValidatorDeBase import ValidatorDeBase
 from src.models.analyseCertificate import AnalyseCertificate
-from src.models.certificateMetadata import CertificateMetadata
 from src.models.getCertificate import GetCertificate
 
 
