@@ -9,11 +9,8 @@ from models.validatorInterface import ValidatorInterface
 from models.KEM import KEM
 from models.certificateManager import CertificateManager
 from models.keyGenerator import KeyGenerator
-from models.DateValidator import DateValidator
-from models.OpenSSLParser import OpenSSLParser
 from models.SSLCertificateFetcher import SSLCertificateFetcher
 from models.SSLConnectionManager import SSLConnectionManager
-from models.certificateMetadata import CertificateMetadata
 from models.getCertificate import GetCertificate
 from models.analyseCertificate import AnalyseCertificate
 import os
