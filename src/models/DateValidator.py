@@ -17,9 +17,9 @@ class DateValidator(DecoratorValidador):
     def validate(self, cert: x509.Certificate):
         certificat_validee = self._validate_date(cert)
         if self.validator_decoree and self.validator_decoree.validate(cert):
-            return certificat_validee, "Date is valid"
+            return certificat_validee
         else:
-            return certificat_validee, "Date is invalid"
+            return certificat_validee
 
     """Vérifie si le certificat est valide pour la date actuelle"""
     def _validate_date(self, cert: x509.Certificate) -> bool:

@@ -24,7 +24,6 @@ class AnalyseCertificate:
 
     def __init__(self):
         self.validator_simple = ValidatorDeBase()
-
         self.validator_date = DateValidator(ValidatorDeBase())
         self.validator_d = Validator(validator=self.validator_date)
         self.validator_issuer = IssuerValidator(ValidatorDeBase())

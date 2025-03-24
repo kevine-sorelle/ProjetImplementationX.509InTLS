@@ -20,9 +20,9 @@ class IssuerValidator(DecoratorValidador):
     def validate(self, cert: x509.Certificate):
         certificat_validee = self._validate_issuer(cert)
         if self.validator_decoree and self.validator_decoree.validate(cert):
-            return certificat_validee, "Issuer is valid"
+            return certificat_validee
         else:
-            return certificat_validee, "Issuer is invalid"
+            return certificat_validee
 
     def _validate_issuer(self, cert: x509.Certificate):
         if isinstance(cert, str):
@@ -33,8 +33,8 @@ class IssuerValidator(DecoratorValidador):
         for part in expected_parts:
             key, value = part.split("=")
             if f"{key}={value}" not in issuer:
-                return False, f"Issuer does not contain {key}={value}"
-        return True, "Issuer is valid"
+                return False
+        return True
 
     def getIssuer(self, cert: x509.Certificate) -> str:
         print(f"this is the getIssuer certificate {cert}")

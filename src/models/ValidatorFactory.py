@@ -1,5 +1,0 @@
-class ValidatorFactory:
-
-    _factories = {
-
-    }
