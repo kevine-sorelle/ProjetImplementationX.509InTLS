@@ -1,17 +1,17 @@
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
-from models.Validator import Validator
-from src.models.certificateValidator import ICertificateValidator
+import sys
+sys.path.append("src")
+from models.decoratorValidador import DecoratorValidador
 
 
-class KeyValidator(Validator):
-    def __init__(self, name, value, type, certificate):
-        super().__init__(name, value, type, certificate)
+class KeyValidator(DecoratorValidador):
+    """def __init__(self, name, value, type, certificate):
+        super().__init__(name, value, type, certificate)"""
 
-    def validate(self):
-        cert = self.certificate
-        if isinstance(self.certificate, str):
+    def validate(self, cert: x509.Certificate):
+        if isinstance(cert, str):
             cert = x509.load_pem_x509_certificate(cert.encode(), default_backend())
         # Récupération de la taille de la clé de l'objet certificat
         key_length = cert.public_key().key_size
