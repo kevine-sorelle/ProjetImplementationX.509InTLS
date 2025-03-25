@@ -1,13 +1,27 @@
 Ce projet a pour but de tester la validation des 
 certificats X.509 dans l'implémentation TLS
 
-# Projet IFT785
+# Projet  Tests de validation de certificat X.509 dans l’implémentation TLS
 
-## Objectif de l'atelier
+## Objectif du projet
 
 Ce projet a pour but de tester la validation des 
-certificats X.509 dans l'implémentation TLS
+certificats X.509 dans l'implémentation TLS. En utilisant une approche orientée objet, les 
+designs patterns, le refactoring et la gestion de versions. Puis d'implémenter et 
+d'exécuter des tests unitaires et fonctionnels sur cette implémentation.
 
+## Architecture du projet
+le projet comporte 3 modules principaux: un module Validator, 
+un module certificate fetcher et un module certificate Sender request
+![img.png](img.png)
+
+## Conception de l'outil
+Dans le cadre de ce projet, plusieurs design pattern(DP) seront utilisés.
+Le premier est le DP Decorator utilisé pour la conception du module validator.
+Ci-dessous l'architecture avant l'utilisation de la DP:
+![packages_UML_Avant.png](Images/packages_UML_Avant.png)
+l'architecture après l'utilisation du DP:
+![classes_UML_Après.png](Images/classes_UML_Apr%C3%A8s.png)
 ## Commandes pour exécuter le projet
 
 1. **Installer les dépendances** :
@@ -45,15 +59,16 @@ make all
 project/p
 ├── src/
 │   ├── app.py               # Contrôleur Flask
+│   ├── config.py               # Contrôleur Flask
     ├── constants.py 
-│   ├── enums/               # enums
-│   ├── models/              # Modèles orientés objets
+│   ├── enums/                 # enums
+│   ├── models/                # Modèles orientés objets
+│   ├── services/              # Couche service
 │   ├── templates/
 │   │   ├ pages/             # Pages de l'aplication
 │   │   ├ partials/          # Header et Footer et nav
 │   ├── static/              # Static files
 │   │   ├ documentation.html # Documentation du projet
-│   ├── services/            # classes du service
 ├── Makefile                 # Commandes Make pour exécuter le projet
 ├── tests/
 │   ├── unit/                # unit test files
