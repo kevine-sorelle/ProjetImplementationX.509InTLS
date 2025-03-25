@@ -13,7 +13,7 @@ d'exécuter des tests unitaires et fonctionnels sur cette implémentation.
 ## Architecture du projet
 le projet comporte 3 modules principaux: un module Validator, 
 un module certificate fetcher et un module certificate Sender request
-![img.png](img.png)
+![img.png](Images/img.png)
 
 ## Conception de l'outil
 Dans le cadre de ce projet, plusieurs design pattern(DP) seront utilisés.
