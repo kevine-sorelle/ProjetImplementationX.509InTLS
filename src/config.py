@@ -5,7 +5,20 @@ SERVER_PORT = 443
 SERVER_HOST = 'google.com'
 
 # Trusted Issuers
-TRUSTED_ISSUERS = ['Google Trust Services']
+TRUSTED_ISSUERS = [
+    'Google Trust Services',
+    'GlobalSign',
+    'DigiCert',
+    'Let\'s Encrypt',
+    'Sectigo',
+    'Amazon',
+    'GTS CA',
+    'Google Internet Authority',
+    'Cloudflare',
+    'Microsoft',
+    'Apple',
+    'Comodo'
+]
 
 # Secret Key
 SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', os.urandom(24))

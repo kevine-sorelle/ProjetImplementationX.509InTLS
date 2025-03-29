@@ -16,6 +16,9 @@ from models.getCertificate import GetCertificate
 from models.analyseCertificate import AnalyseCertificate
 import os
 
+from models.ValidatorFactory import ValidatorFactory
+from models.ValidationStrategy import ValidationStrategy
+
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
@@ -31,26 +34,40 @@ if not os.path.exists(CERT_PATH):
 
 
 @app.route("/", methods=["GET", "POST"])
-def home():
-    cert_info = {}
-    try:
-        if request.method == "POST":
-                hostname = request.form["hostname"]
-                port = request.form["port"]
-                connection = SSLConnectionManager(hostname, port)
-                fetcher = SSLCertificateFetcher()
-                certificate_retriever = GetCertificate(connection, fetcher)
-                analyser = AnalyseCertificate()
-                my_certificate = certificate_retriever.getCertificate()
-                session["certificate"] = my_certificate
-                data = analyser.analyseCertificate(my_certificate)
-                cert_info = {"hostname": hostname, "valid": data["is_valid"], "issuer": data["issuer"], "subject": data["subject"]}
-        else:
-            cert_info = {}
-    except Exception as e:
-        # ajout de l'information d'erreur pour cert_info
-        cert_info["Invalid"] = f"Erreur: {str(e)}"
-    return render_template("pages/index.html", cert_info=cert_info)
+def index():
+    if request.method == 'POST':
+        hostname = request.form.get('hostname')
+        port = int(request.form.get('port', 443))
+        selected_validators = request.form.getlist('validators')
+        
+        try:
+            # Initialize components for certificate retrieval
+            ssl_manager = SSLConnectionManager(hostname, port)
+            ssl_fetcher = SSLCertificateFetcher()
+            cert_retriever = GetCertificate(ssl_manager, ssl_fetcher)
+            
+            # Get the certificate
+            certificate = cert_retriever.get_certificate(hostname, port)
+            
+            # Store in session for other routes
+            session["certificate"] = certificate
+            
+            # Create validation strategy with selected validators
+            strategy = ValidationStrategy(selected_validators)
+            validation_results = strategy.validate_certificate(certificate)
+            
+            return render_template('pages/index.html',
+                                hostname=hostname,
+                                validation_results=validation_results,
+                                available_validators=ValidatorFactory.get_available_validators())
+        except Exception as e:
+            return render_template('pages/index.html',
+                                hostname=hostname,
+                                validation_results={'error': {'valid': False, 'message': str(e)}},
+                                available_validators=ValidatorFactory.get_available_validators())
+    
+    return render_template('pages/index.html',
+                         available_validators=ValidatorFactory.get_available_validators())
 
 @app.route("/generator")
 def generator():
