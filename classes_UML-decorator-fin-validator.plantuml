@@ -1,0 +1,98 @@
+@startuml classes_UML-decorator-fin-validator
+set namespaceSeparator none
+class "Certificat" as src.models.certificat {
+  PQC_OIDS : dict
+  certificate_type
+  issuer
+  not_valid_after
+  not_valid_before
+  serial_number
+  subject
+  validation_results
+  x509_cert
+  add_validation_result(validator_name: str, is_valid: bool, message: str)
+  get_all_oids() -> List[x509.ObjectIdentifier]
+  get_extension(oid: x509.ObjectIdentifier) -> Optional[x509.Extension]
+  get_extension_critical()
+  get_extension_oids()
+  get_extension_values()
+  get_extensions()
+  get_issuer_name()
+  get_pqc_algorithm_info() -> Optional[Dict[str, Any]]
+  get_public_key()
+  get_serial_number()
+  get_signature()
+  get_signature_algorithm()
+  get_subject_name()
+  get_validation_summary() -> Dict[str, Any]
+  get_validity_period()
+  get_version()
+  is_valid() -> bool
+  requires_pqc_validation() -> bool
+}
+class "CertificateType" as src.models.certificat.CertificateType {
+  name
+}
+class "DateValidator" as src.models.DateValidator {
+  getValidityPeriod(cert: x509.Certificate) -> dict
+  validate(cert: x509.Certificate)
+}
+class "DecoratorValidador" as src.models.DecoratorValidador {
+  validator_decoree
+  {abstract}validate(certificate)
+}
+class "ValidatorInterface" as src.models.ValidatorInterface {
+  {abstract}validate(certificate)
+}
+class "Validator" as src.models.Validator {
+  validator: "ValidadorInterface"
+  validate(certificate)
+}
+class "ExtensionValidator" as src.models.ExtensionValidator {
+  validate(certificate: Union[Certificat, str, x509.Certificate]) -> Tuple[bool, str]
+}
+class "IssuerValidator" as src.models.IssuerValidator {
+  getIssuer(cert: x509.Certificate) -> str
+  validate(cert: x509.Certificate)
+}
+class "KeyValidator" as src.models.KeyValidator {
+  validate(cert: x509.Certificate)
+}
+class "ValidationStrategy" as src.models.ValidationStrategy {
+  validators : list
+  validate_certificate(certificate) -> dict
+}
+class "RevocationValidator" as src.models.RevocationValidator {
+  validate(certificate: Union[Certificat, str, x509.Certificate]) -> Tuple[bool, str]
+}
+class "SignatureValidator" as src.models.SignatureValidator {
+  get_public_key(certificate: x509.Certificate)
+  get_signature(certificate: x509.Certificate)
+  validate(certificate: Union[Certificat, str, x509.Certificate], issuer_cert: Optional[Certificat]) -> tuple[bool, str]
+  validate_trusted_issuer(certificate: x509.Certificate, trusted_issuers: list)
+  verify_certificate_signature(cert: x509.Certificate, issuer_cert)
+}
+class "ValidatorDeBase" as src.models.ValidatorDeBase {
+  validate(certificate: Union[str, x509.Certificate]) -> Tuple[bool, str]
+}
+class "ValidatorFactory" as src.models.ValidatorFactory {
+  create_validator(validator_type: str) -> ValidatorInterface
+  get_available_validators() -> list[str]
+}
+src.app ..> src.models.ValidationStrategy  : uses
+src.app ..> src.models.ValidatorFactory  : uses
+src.models.ValidationStrategy ..> src.models.ValidatorDeBase  : uses
+src.models.ValidationStrategy ..> src.models.Validator  : uses
+src.models.ValidationStrategy ..> src.models.ValidatorFactory  : uses
+src.models.ValidatorFactory ..> src.models.ValidatorInterface  : uses
+src.models.Validator ..> src.models.ValidatorInterface  : uses
+src.models.DecoratorValidador ..> src.models.ValidatorInterface  : implement
+src.models.DecoratorValidador <.. src.models.DateValidator : inherit
+src.models.DecoratorValidador <.. src.models.IssuerValidator : inherit
+src.models.DecoratorValidador <.. src.models.KeyValidator : inherit
+src.models.DecoratorValidador <.. src.models.SignatureValidator : inherit
+src.models.DecoratorValidador <.. src.models.RevocationValidator : inherit
+src.models.DecoratorValidador <.. src.models.AlgorithmValidator : inherit
+src.models.DecoratorValidador <.. src.models.ExtensionValidator : inherit
+
+@enduml

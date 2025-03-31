@@ -22,6 +22,14 @@ Ci-dessous l'architecture avant l'utilisation de la DP:
 ![packages_UML_Avant.png](Images/packages_UML_Avant.png)
 l'architecture après l'utilisation du DP:
 ![classes_UML_Après.png](Images/classes_UML_Apr%C3%A8s.png)
+
+Afin d'utiliser d'optimiser le processus de validation du certificat, deux autres design pattern ont été intégré à l'outil. Il s'agit du design pattern Factory responsable du processus de création des classes de validation des propriétés du certificat. Ci-dessous l'architecture après intégration de ce DP:
+![classes_UML_factory_validator.png](Images/classes_UML_factory_validator.png)
+Afin de permettre la selection du type de validation à effectué, le DP strategy a été intégré dans l'architecture. Ci dessous le diagramme UML:
+![classes_UML_strategy_validator.png](Images/classes_UML_strategy_validator.png)
+Pour finir, la nouvelle architecture du module validator avec le DP decorator utilisé initialement est le suivant:
+![classes_UML_decorator_validator.png](Images/classes_UML_decorator_validator.png)
+
 ## Commandes pour exécuter le projet
 
 1. **Installer les dépendances** :

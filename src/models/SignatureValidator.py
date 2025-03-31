@@ -52,9 +52,12 @@ class SignatureValidator(DecoratorValidador):
             logger.debug(f"Signature algorithm: {cert.x509_cert.signature_algorithm_oid}")
             logger.debug(f"Public key type: {type(cert.get_public_key()).__name__}")
             
-            # Check if issuer certificate is required
+            # If no issuer certificate provided, try to fetch it
             if not issuer_cert and cert.certificate_type == CertificateType.TRADITIONAL:
-                return False, "Issuer certificate required for signature validation"
+                logger.debug("No issuer certificate provided, attempting to fetch from AIA")
+                issuer_cert = self._get_issuer_certificate(cert)
+                if not issuer_cert:
+                    return False, "Could not fetch issuer certificate from AIA extension"
 
             # First let the base validator process the certificate
             base_valid = self.validator_decoree.validate(cert.x509_cert)
@@ -284,4 +287,43 @@ class SignatureValidator(DecoratorValidador):
         
         logger.warning(f"No matching trusted issuer found for: {actual_issuer}")
         return False
+
+    def _get_issuer_certificate(self, cert: Certificat) -> Optional[Certificat]:
+        """Fetch the issuer certificate from the certificate's AIA extension"""
+        try:
+            # Get the AIA extension
+            aia = cert.x509_cert.extensions.get_extension_for_oid(x509.oid.ExtensionOID.AUTHORITY_INFORMATION_ACCESS)
+            
+            # Look for the CA Issuers URI
+            for access_description in aia.value:
+                if access_description.access_method == x509.oid.AuthorityInformationAccessOID.CA_ISSUERS:
+                    issuer_url = access_description.access_location.value
+                    logger.debug(f"Found issuer certificate URL: {issuer_url}")
+                    
+                    # Download the issuer certificate
+                    import requests
+                    response = requests.get(issuer_url)
+                    if response.status_code == 200:
+                        try:
+                            # Try to load as PEM first
+                            issuer_cert = x509.load_pem_x509_certificate(response.content, default_backend())
+                        except ValueError:
+                            # If PEM fails, try DER
+                            issuer_cert = x509.load_der_x509_certificate(response.content, default_backend())
+                        
+                        logger.debug(f"Successfully loaded issuer certificate for: {issuer_cert.subject}")
+                        return Certificat(issuer_cert)
+                    else:
+                        logger.error(f"Failed to download issuer certificate from {issuer_url}")
+                        return None
+            
+            logger.warning("No CA Issuers URI found in AIA extension")
+            return None
+            
+        except x509.extensions.ExtensionNotFound:
+            logger.warning("No AIA extension found in certificate")
+            return None
+        except Exception as e:
+            logger.error(f"Error fetching issuer certificate: {str(e)}")
+            return None
 
