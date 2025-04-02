@@ -11,8 +11,7 @@ def setup():
     connection = SSLConnectionManager("google.com", 443)
     fetcher = SSLCertificateFetcher()
     get_certificate = GetCertificate(connection, fetcher) # Récupération du certificat
-    cert_pem = get_certificate.getCertificate()
-
+    cert_pem = get_certificate.get_certificate("google.com")  # Updated method name and added hostname
     return cert_pem
 
 def test_analyse_certificate(setup):

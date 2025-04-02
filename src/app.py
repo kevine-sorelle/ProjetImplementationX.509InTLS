@@ -69,7 +69,7 @@ def index():
     return render_template('pages/index.html',
                          available_validators=ValidatorFactory.get_available_validators())
 
-@app.route("/generator")
+@app.route("/generator", methods=["GET", "POST"])
 def generator():
     """Generation et affichage des details du certificat et chiffrement KEM"""
     cert = cert_manager.loadCertificate(cert_path=CERT_PATH)
@@ -84,7 +84,7 @@ def generator():
                            enc_key=enc_key.hex(),
                            dec_key=dec_key.hex())
 
-@app.route("/tests")
+@app.route("/tests", methods=["GET", "POST"])
 def tests():
     """Page de tests"""
     test_results = {}
@@ -101,7 +101,7 @@ def tests():
     return render_template("pages/tests.html", test_results=test_results)
 
 
-@app.route("/download")
+@app.route("/download", methods=["GET", "POST"])
 def download():
     """Permettre aux utilisateurs de télécharger le certificat généré."""
     return send_file(CERT_PATH, as_attachment=True)

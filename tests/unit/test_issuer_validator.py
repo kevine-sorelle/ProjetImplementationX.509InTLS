@@ -13,7 +13,7 @@ def setup():
     connection = SSLConnectionManager("google.com", 443)
     fetcher = SSLCertificateFetcher()
     get_certificate = GetCertificate(connection, fetcher)
-    cert_pem = get_certificate.getCertificate()
+    cert_pem = get_certificate.get_certificate(connection.hostname, connection.port)
 
     return cert_pem, issuer_validator
 
