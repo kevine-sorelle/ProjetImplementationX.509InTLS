@@ -22,7 +22,7 @@ def test_validate_certificate(client):
     test_data = {
         'hostname': 'google.com',
         'port': 443,
-        'validators': ['signature', 'key', 'issuer', 'date', 'revocation', 'extension']
+        'validators': ['signature', 'key', 'issuer', 'date', 'revocation', 'extension', 'algorithm']
     }
     # Act
     response = client.post('/', data=test_data, follow_redirects=True)
@@ -35,7 +35,7 @@ def test_generate_certificate(client):
     test_data = {
         'hostname': 'google.com',
         'port': 443,
-        'validators': ['signature', 'key', 'issuer', 'date', 'revocation', 'extension']
+        'validators': ['signature', 'key', 'issuer', 'date', 'revocation', 'extension', 'algorithm']
     }
     # Act
     response = client.post('/generator', data=test_data, follow_redirects=True)
@@ -48,7 +48,7 @@ def test_download_certificate(client):
     test_data = {
         'hostname': 'google.com',
         'port': 443,
-        'validators': ['signature', 'key', 'issuer', 'date', 'revocation', 'extension']
+        'validators': ['signature', 'key', 'issuer', 'date', 'revocation', 'extension', 'algorithm']
     }
     # Act
     response = client.post('/download', data=test_data, follow_redirects=True)
@@ -61,7 +61,7 @@ def test_tests(client):
     test_data = {
         'hostname': 'google.com',
         'port': 443,
-        'validators': ['signature', 'key', 'issuer', 'date', 'revocation', 'extension']
+        'validators': ['signature', 'key', 'issuer', 'date', 'revocation', 'extension', 'algorithm']
     }
     # Act
     response = client.post('/tests', data=test_data, follow_redirects=True)

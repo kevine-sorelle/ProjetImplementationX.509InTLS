@@ -25,12 +25,13 @@ def setup(test_certificate):
     validator_extension = validator_factory.create_validator("extension", base_validator)
     validator_issuer = validator_factory.create_validator("issuer", base_validator)
     validator_date = validator_factory.create_validator("date", base_validator)
-    return validator_signature, validator_key, validator_revocation, validator_extension, validator_issuer, validator_date, test_certificate
+    validator_algorithm = validator_factory.create_validator("algorithm", base_validator)
+    return validator_signature, validator_key, validator_revocation, validator_extension, validator_issuer, validator_date, validator_algorithm, test_certificate
 
 def test_signature_validator(setup):
     # Arrange
     validator = setup[0]
-    certificate = setup[6]
+    certificate = setup[7]
 
     # Act
     result, message  = validator.validate(certificate)
@@ -42,7 +43,7 @@ def test_signature_validator(setup):
 def test_key_validator(setup):
     # Arrange
     validator = setup[1]
-    certificate = setup[6]
+    certificate = setup[7]
 
     # Act
     result, message  = validator.validate(certificate)
@@ -53,7 +54,7 @@ def test_key_validator(setup):
 def test_revocation_validator(setup):
     # Arrange
     validator = setup[2]
-    certificate = setup[6]
+    certificate = setup[7]  
 
     # Act
     result, message  = validator.validate(certificate)
@@ -64,7 +65,7 @@ def test_revocation_validator(setup):
 def test_extension_validator(setup):
     # Arrange
     validator = setup[3]
-    certificate = setup[6]
+    certificate = setup[7]
 
     # Act
     result, message = validator.validate(certificate)
@@ -75,7 +76,7 @@ def test_extension_validator(setup):
 def test_issuer_validator(setup):
     # Arrange
     validator = setup[4]
-    certificate = setup[6]
+    certificate = setup[7]
 
     # Act
     result = validator.validate(certificate)
@@ -86,7 +87,7 @@ def test_issuer_validator(setup):
 def test_date_validator(setup):
     # Arrange
     validator = setup[5]
-    certificate = setup[6]
+    certificate = setup[7]
 
     # Act
     result = validator.validate(certificate)    
@@ -96,7 +97,16 @@ def test_date_validator(setup):
 
 
 
+def test_algorithm_validator(setup):
+    # Arrange
+    validator = setup[6]
+    certificate = setup[7]
 
+    # Act
+    is_valid, message = validator.validate(certificate)
+
+    # Assert
+    assert is_valid, f"Algorithm validation failed: {message}"
 
 
 

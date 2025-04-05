@@ -18,7 +18,7 @@ def test_index_post_performance(benchmark, client):
     test_data = {
         'hostname': 'facebook.com',
         'port': 443,
-        'validators': ['SignatureValidator', 'KeyValidator', 'IssuerValidator', 'DateValidator', 'RevocationValidator', 'ExtensionValidator']
+        'validators': ['SignatureValidator', 'KeyValidator', 'IssuerValidator', 'DateValidator', 'RevocationValidator', 'ExtensionValidator', 'AlgorithmValidator']
     }
 
     def do_request():
@@ -41,7 +41,7 @@ def test_generator_post_performance(benchmark, client):
     test_data = {
         'hostname': 'facebook.com',
         'port': 443,
-        'validators': ['SignatureValidator', 'KeyValidator', 'IssuerValidator', 'DateValidator', 'RevocationValidator', 'ExtensionValidator']
+        'validators': ['SignatureValidator', 'KeyValidator', 'IssuerValidator', 'DateValidator', 'RevocationValidator', 'ExtensionValidator', 'AlgorithmValidator']
     }
 
     def do_request():
@@ -58,7 +58,7 @@ def test_tests_post_performance(benchmark, client):
     test_data = {
         'hostname': 'facebook.com',
         'port': 443,
-        'validators': ['SignatureValidator', 'KeyValidator', 'IssuerValidator', 'DateValidator', 'RevocationValidator', 'ExtensionValidator']
+        'validators': ['SignatureValidator', 'KeyValidator', 'IssuerValidator', 'DateValidator', 'RevocationValidator', 'ExtensionValidator', 'AlgorithmValidator']
     }
 
     def do_request():
@@ -75,7 +75,7 @@ def test_download_post_performance(benchmark, client):
     test_data = {
         'hostname': 'facebook.com',
         'port': 443,
-        'validators': ['SignatureValidator', 'KeyValidator', 'IssuerValidator', 'DateValidator', 'RevocationValidator', 'ExtensionValidator']
+        'validators': ['SignatureValidator', 'KeyValidator', 'IssuerValidator', 'DateValidator', 'RevocationValidator', 'ExtensionValidator', 'AlgorithmValidator']
     }
 
     def do_request():

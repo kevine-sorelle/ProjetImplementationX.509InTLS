@@ -17,7 +17,7 @@ def test_certificate():
 
 @pytest.fixture
 def setup(test_certificate):
-    list_validators = ["signature", "key", "issuer", "date", "revocation", "extension"]
+    list_validators = ["signature", "key", "issuer", "date", "revocation", "extension", "algorithm"]
     strategy = ValidationStrategy(list_validators)
     return strategy, test_certificate
 
@@ -115,4 +115,18 @@ def test_extension_validator(setup):
     assert result['extension']['valid'] is True, f"Extension validation failed: {result['extension']['message']}"
     # Check that all validators passed
     for validator_name, validation_result in result.items():
-        assert validation_result['valid'] is True, f"{validator_name} validation failed: {validation_result['message']}"       
+        assert validation_result['valid'] is True, f"{validator_name} validation failed: {validation_result['message']}" 
+
+def test_algorithm_validator(setup):
+    # Arrange
+    strategy = setup[0]
+    certificate = setup[1]
+
+    # Act
+    result = strategy.validate_certificate(certificate)
+
+    # Assert
+    assert isinstance(result, dict), "Result should be a dictionary"
+    assert 'algorithm' in result, "Algorithm validation result should be present"
+    assert result['algorithm']['valid'] is True, f"Algorithm validation failed: {result['algorithm']['message']}"
+    

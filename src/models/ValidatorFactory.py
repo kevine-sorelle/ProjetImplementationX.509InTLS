@@ -9,6 +9,7 @@ from models.IssuerValidator import IssuerValidator
 from models.DateValidator import DateValidator
 from models.RevocationValidator import RevocationValidator
 from models.ExtensionValidator import ExtensionValidator
+from models.AlgorithmValidator import AlgorithmValidator
 
 class ValidatorFactory:
     _validators: Dict[str, Type[ValidatorInterface]] = {
@@ -17,7 +18,8 @@ class ValidatorFactory:
         'issuer': IssuerValidator,
         'date': DateValidator,
         'revocation': RevocationValidator,
-        'extension': ExtensionValidator
+        'extension': ExtensionValidator,
+        'algorithm': AlgorithmValidator
     }
 
     @classmethod
