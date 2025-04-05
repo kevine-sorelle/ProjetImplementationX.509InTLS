@@ -2,7 +2,7 @@ from typing import Union, Tuple
 from cryptography import x509
 import sys
 sys.path.append("src")
-from  src.config import DEPRECATED_ALGORITHMS, SECURE_ALGORITHMS
+from  config import DEPRECATED_ALGORITHMS, SECURE_ALGORITHMS
 from .decoratorValidador import DecoratorValidador
 from .certificat import Certificat
 from .ValidatorDeBase import ValidatorDeBase
