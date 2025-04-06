@@ -1,5 +1,5 @@
 from cryptography.hazmat.primitives import serialization
-from flask import Flask, request, render_template, send_file, session
+from flask import Flask, request, render_template, send_file, session, redirect, url_for, flash
 import sys
 sys.path.append("src")
 from models.validatorInterface import ValidatorInterface
@@ -7,9 +7,6 @@ from models.validatorInterface import ValidatorInterface
 
 from config import SECRET_KEY
 from services.SecurityTest import SecurityTest
-from models.KEM import KEM
-from models.certificateManager import CertificateManager
-from models.keyGenerator import KeyGenerator
 from models.SSLCertificateFetcher import SSLCertificateFetcher
 from models.SSLConnectionManager import SSLConnectionManager
 from models.getCertificate import GetCertificate
@@ -18,20 +15,13 @@ import os
 
 from models.ValidatorFactory import ValidatorFactory
 from models.ValidationStrategy import ValidationStrategy
+from models.ServerSecurityAnalyzer import ServerSecurityAnalyzer
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
-# Initialisation des classes maitresses
-key_gen = KeyGenerator()
-cert_manager = CertificateManager(key_gen)
-kem = KEM()
-
-# Generation du certificat X.509
-CERT_PATH = os.path.join(os.path.dirname(__file__), "kem_cert.pem")
-if not os.path.exists(CERT_PATH):
-    cert_manager.createSelfSignedCert("kem-test.local", CERT_PATH)
-
+# Initialize the server security analyzer
+security_analyzer = ServerSecurityAnalyzer()
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -51,6 +41,8 @@ def index():
             
             # Store in session for other routes
             session["certificate"] = certificate
+            session["hostname"] = hostname
+            session["port"] = port
             
             # Create validation strategy with selected validators
             strategy = ValidationStrategy(selected_validators)
@@ -69,20 +61,52 @@ def index():
     return render_template('pages/index.html',
                          available_validators=ValidatorFactory.get_available_validators())
 
-@app.route("/generator", methods=["GET", "POST"])
-def generator():
-    """Generation et affichage des details du certificat et chiffrement KEM"""
-    cert = cert_manager.loadCertificate(cert_path=CERT_PATH)
-    pub_key = cert.public_key().public_bytes(
-        encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo).decode()
-
-    enc_key = kem.encapsulate()
-    dec_key = kem.decapsulate(enc_key)
-    return render_template("pages/generator.html",
-                           cert_pem=cert.public_bytes(serialization.Encoding.PEM).decode(),
-                           public_key=pub_key,
-                           enc_key=enc_key.hex(),
-                           dec_key=dec_key.hex())
+@app.route("/server-security", methods=["GET", "POST"])
+def server_security():
+    """Server security dashboard showing detailed security information"""
+    if request.method == "POST":
+        hostname = request.form.get('hostname')
+        port = int(request.form.get('port', 443))
+        
+        try:
+            # Initialize components for certificate retrieval
+            ssl_manager = SSLConnectionManager(hostname, port)
+            ssl_fetcher = SSLCertificateFetcher()
+            cert_retriever = GetCertificate(ssl_manager, ssl_fetcher)
+            
+            # Get the certificate and analyze
+            certificate = cert_retriever.get_certificate(hostname, port)
+            analysis_results = security_analyzer.analyze_server_with_cert(certificate, hostname, port)
+            
+            if 'error' in analysis_results:
+                flash(analysis_results['error'], "error")
+                return render_template('pages/server_security_dashboard.html')
+            
+            return render_template('pages/server_security_dashboard.html',
+                                server_info=analysis_results['server_info'],
+                                validation_results=analysis_results['validation_results'],
+                                security_recommendations=analysis_results['security_recommendations'])
+        except Exception as e:
+            flash(str(e), "error")
+            return render_template('pages/server_security_dashboard.html')
+    
+    # For GET requests, check if we have a certificate in session
+    certificate = session.get("certificate")
+    hostname = session.get("hostname")
+    port = session.get("port", 443)
+    
+    if certificate and hostname:
+        try:
+            analysis_results = security_analyzer.analyze_server_with_cert(certificate, hostname, port)
+            return render_template('pages/server_security_dashboard.html',
+                                server_info=analysis_results['server_info'],
+                                validation_results=analysis_results['validation_results'],
+                                security_recommendations=analysis_results['security_recommendations'])
+        except Exception as e:
+            flash(str(e), "error")
+    
+    # If no certificate or error occurred, show the default dashboard
+    return render_template('pages/server_security_dashboard.html')
 
 @app.route("/tests", methods=["GET", "POST"])
 def tests():
@@ -104,7 +128,18 @@ def tests():
 @app.route("/download", methods=["GET", "POST"])
 def download():
     """Permettre aux utilisateurs de télécharger le certificat généré."""
-    return send_file(CERT_PATH, as_attachment=True)
+    # Get the certificate from the session
+    cert = session.get("certificate", None)
+    if not cert:
+        return "No certificate found in session", 404
+    
+    # Create a temporary file to store the certificate
+    temp_path = os.path.join(os.path.dirname(__file__), "temp_cert.pem")
+    with open(temp_path, "w") as f:
+        f.write(cert)
+    
+    # Send the file
+    return send_file(temp_path, as_attachment=True, download_name="certificate.pem")
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -17,14 +17,14 @@
           <a
             class="nav-link {% if request.endpoint == 'index' %}active{% endif %}"
             href="{{ url_for('index') }}"
-            >Accueil</a
+            >Certificate Validator</a
           >
         </li>
         <li class="nav-item">
           <a
-            class="nav-link {% if request.endpoint == 'generator' %}active{% endif %}"
-            href="{{ url_for('generator') }}"
-            >Certificate Generator</a
+            class="nav-link {% if request.endpoint == 'server_security' %}active{% endif %}"
+            href="{{ url_for('server_security') }}"
+            >Server Security Dashboard</a
           >
         </li>
         <li class="nav-item">

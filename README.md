@@ -11,7 +11,7 @@ designs patterns, le refactoring et la gestion de versions. Puis d'implémenter 
 d'exécuter des tests unitaires et fonctionnels sur cette implémentation.
 
 ## Architecture du projet
-le projet comporte 3 modules principaux: un module Validator, 
+le projet comporte 2 modules principaux: un module Validator (models) reponsable des opérations de validation et de la vérification des attributs des certificats, un module ServerSecurityAnalyser responsable de la vérification des propriétées de sécurité du certificat recupéré au niveau du module validator.
 un module certificate fetcher et un module certificate Sender request
 ![img.png](Images/img.png)
 
