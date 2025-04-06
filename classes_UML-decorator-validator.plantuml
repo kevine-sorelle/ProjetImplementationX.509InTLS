@@ -1,0 +1,67 @@
+@startuml classes_UML-decorator-validator
+set namespaceSeparator none
+class "Certificat" as src.models.certificat.Certificat {
+  PQC_OIDS : dict
+  certificate_type
+  issuer
+  not_valid_after
+  not_valid_before
+  serial_number
+  subject
+  validation_results
+  x509_cert
+  add_validation_result(validator_name: str, is_valid: bool, message: str)
+  get_all_oids() -> List[x509.ObjectIdentifier]
+  get_extension(oid: x509.ObjectIdentifier) -> Optional[x509.Extension]
+  get_extension_critical()
+  get_extension_oids()
+  get_extension_values()
+  get_extensions()
+  get_issuer_name()
+  get_pqc_algorithm_info() -> Optional[Dict[str, Any]]
+  get_public_key()
+  get_serial_number()
+  get_signature()
+  get_signature_algorithm()
+  get_subject_name()
+  get_validation_summary() -> Dict[str, Any]
+  get_validity_period()
+  get_version()
+  is_valid() -> bool
+  requires_pqc_validation() -> bool
+}
+class "CertificateType" as src.models.certificat.CertificateType {
+  name
+}
+class "DateValidator" as src.models.DateValidator.DateValidator {
+  getValidityPeriod(cert: x509.Certificate) -> dict
+  validate(cert: x509.Certificate)
+}
+class "DecoratorValidador" as src.models.decoratorValidador.DecoratorValidador {
+  validator_decoree
+  {abstract}validate(certificate)
+}
+class "ExtensionValidator" as src.models.ExtensionValidator.ExtensionValidator {
+  validate(certificate: Union[Certificat, str, x509.Certificate]) -> Tuple[bool, str]
+}
+class "IssuerValidator" as src.models.IssuerValidator.IssuerValidator {
+  getIssuer(cert: x509.Certificate) -> str
+  validate(cert: x509.Certificate)
+}
+class "KeyValidator" as src.models.KeyValidator.KeyValidator {
+  validate(cert: x509.Certificate)
+}
+class "RevocationValidator" as src.models.RevocationValidator.RevocationValidator {
+  validate(certificate: Union[Certificat, str, x509.Certificate]) -> Tuple[bool, str]
+}
+class "SignatureValidator" as src.models.SignatureValidator.SignatureValidator {
+  get_public_key(certificate: x509.Certificate)
+  get_signature(certificate: x509.Certificate)
+  validate(certificate: Union[Certificat, str, x509.Certificate], issuer_cert: Optional[Certificat]) -> tuple[bool, str]
+  validate_trusted_issuer(certificate: x509.Certificate, trusted_issuers: list)
+  verify_certificate_signature(cert: x509.Certificate, issuer_cert)
+}
+class "ValidatorDeBase" as src.models.ValidatorDeBase.ValidatorDeBase {
+  validate(certificate: Union[str, x509.Certificate]) -> Tuple[bool, str]
+}
+@enduml
