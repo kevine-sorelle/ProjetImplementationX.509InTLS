@@ -2,22 +2,30 @@
 from cryptography import x509
 from utils.logger_config import setup_logger
 from typing import Union, Tuple
+from models.certificat import Certificat
 
 logger = setup_logger(__name__)
 
 class ValidatorDeBase:
     """Base validator class that all other validators can build upon"""
 
-    def validate(self, certificate: Union[str, x509.Certificate]) -> Tuple[bool, str]:
+    def validate(self, certificate: Union[str, x509.Certificate, Certificat]) -> Tuple[bool, str]:
         """Basic validation to ensure we have a valid X.509 certificate.
         
         Args:
-            certificate: The certificate to validate (string or x509.Certificate)
+            certificate: The certificate to validate (string, x509.Certificate, or Certificat)
             
         Returns:
             Tuple[bool, str]: (is_valid, message)
         """
         try:
+            # If it's a Certificat object, extract the x509_cert
+            if isinstance(certificate, Certificat):
+                if certificate.x509_cert:
+                    return True, "Valid X.509 certificate format"
+                else:
+                    return False, "Invalid certificate: x509_cert is None"
+                
             # If it's already an x509.Certificate object, it's valid
             if isinstance(certificate, x509.Certificate):
                 return True, "Valid X.509 certificate format"

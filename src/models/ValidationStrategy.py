@@ -6,6 +6,9 @@ from models.validatorInterface import ValidatorInterface
 from models.ValidatorFactory import ValidatorFactory
 from models.Validator import Validator
 from models.ValidatorDeBase import ValidatorDeBase
+from utils.logger_config import setup_logger
+
+logger = setup_logger(__name__)
 
 class ValidationStrategy:
     def __init__(self, validator_types: List[str]):
@@ -23,7 +26,7 @@ class ValidationStrategy:
                 wrapped_validator = Validator(new_validator)
                 self.validators.append(wrapped_validator)
             except ValueError as e:
-                print(f"Warning: {str(e)}")
+                logger.warning(f"Warning: {str(e)}")
 
     def validate_certificate(self, certificate) -> dict:
         """Run all validations and return results"""
@@ -35,6 +38,17 @@ class ValidationStrategy:
         for validator in self.validators:
             try:
                 result = validator.validate(certificate)
+                
+                # Handle None returns
+                if result is None:
+                    logger.warning(f"Validator {validator.validator.__class__.__name__} returned None")
+                    validator_name = validator.validator.__class__.__name__.replace('Validator', '')
+                    results[validator_name.lower()] = {
+                        'valid': False,
+                        'message': "Validation failed: No result returned"
+                    }
+                    continue
+                
                 # Handle both tuple returns (new style) and direct returns (old style)
                 if isinstance(result, tuple):
                     is_valid, message = result
@@ -48,9 +62,11 @@ class ValidationStrategy:
                     'message': message
                 }
             except Exception as e:
-                results['error'] = {
+                logger.error(f"Error in validator {validator.validator.__class__.__name__}: {str(e)}")
+                validator_name = validator.validator.__class__.__name__.replace('Validator', '')
+                results[validator_name.lower()] = {
                     'valid': False,
-                    'message': str(e)
+                    'message': f"Validation error: {str(e)}"
                 }
         
         return results 
