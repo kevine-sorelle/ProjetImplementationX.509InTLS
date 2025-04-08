@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List
 from enum import Enum
 from utils.logger_config import setup_logger
+from config import PQC_OIDS
+
 
 # Set up logger for this module
 logger = setup_logger(__name__)
@@ -15,43 +17,67 @@ class CertificateType(Enum):
     HYBRID = "hybrid"           # Hybrid certificates (traditional + PQC)
 
 class Certificat:
-    """A wrapper class for X.509 certificates with validation state"""
+    _instance = None
+    _x509_cert = None
 
-    # OIDs for PQC algorithms (example OIDs - these should be updated with actual standardized OIDs)
-    PQC_OIDS = {
-        'dilithium': x509.ObjectIdentifier('1.3.6.1.4.1.2.267.7.4.4'),
-        'falcon': x509.ObjectIdentifier('1.3.9999.3.1'),
-        'sphincs': x509.ObjectIdentifier('1.3.9999.6.4.13')
-    }
-
-    def __init__(self, x509_cert: x509.Certificate):
-        """Initialize certificate with an x509 Certificate object
-        
-        Args:
-            x509_cert: The cryptography.x509.Certificate object
-        """
-        self._x509_cert = x509_cert
+    def __new__(cls, x509_cert=None):
+        if cls._instance is None:
+            cls._instance = super(Certificat, cls).__new__(cls)
+            cls._instance._x509_cert = x509_cert
+        return cls._instance
+    
+    def __init__(self, x509_cert=None):
+        #self.x509_cert = x509_cert
         self._validation_results: Dict[str, Dict[str, Any]] = {}
         self._cert_type = self._determine_certificate_type()
         
         # Extract and store basic certificate information
-        self.subject = x509_cert.subject.rfc4514_string()
-        self.issuer = x509_cert.issuer.rfc4514_string()
-        self.not_valid_before = x509_cert.not_valid_before
-        self.not_valid_after = x509_cert.not_valid_after
-        self.serial_number = x509_cert.serial_number
-        
-        logger.debug(f"Created certificate wrapper for {self.subject} of type {self._cert_type.value}")
+        if self._x509_cert:
+            self.subject = self._x509_cert.subject.rfc4514_string()
+            self.issuer = self._x509_cert.issuer.rfc4514_string()
+            self.not_valid_before = self._x509_cert.not_valid_before_utc
+            self.not_valid_after = self._x509_cert.not_valid_after_utc
+            self.serial_number = self._x509_cert.serial_number
+            
+            logger.debug(f"Created certificate wrapper for {self.subject} of type {self._cert_type.value}")
+
+    @property
+    def x509_cert(self) -> x509.Certificate:
+        """Get the underlying X.509 certificate"""
+        return self._x509_cert
+    
+    @x509_cert.setter
+    def x509_cert(self, value):
+        """Set the underlying X.509 certificate if it's not already set"""
+        if self._x509_cert is None:
+            self._x509_cert = value
+            # Re-initialize the certificate wrapper with the new certificate
+            if value:
+                #self.__init__(value)
+                self.subject = value.subject.rfc4514_string()
+                self.issuer = value.issuer.rfc4514_string()
+                self.not_valid_before = value.not_valid_before_utc
+                self.not_valid_after = value.not_valid_after_utc
+                self.serial_number = value.serial_number
+                self._cert_type = self._determine_certificate_type()
+        else:
+            logger.warning("Certificate is already set and cannot be changed (Singleton pattern)")
+
+    @classmethod
+    def reset(cls):
+        """Reset the singleton instance (useful for testing)"""
+        cls._instance = None
+        cls._x509_cert = None
 
     def _determine_certificate_type(self) -> CertificateType:
         """Determine if this is a traditional, PQC, or hybrid certificate"""
-        sig_oid = self._x509_cert.signature_algorithm_oid
+        sig_oid = self.x509_cert.signature_algorithm_oid if self.x509_cert else None
         
         # Check if certificate uses PQC algorithms
-        has_pqc = any(pqc_oid in self.get_all_oids() for pqc_oid in self.PQC_OIDS.values())
+        has_pqc = any(pqc_oid in self.get_all_oids() for pqc_oid in PQC_OIDS.values()) if self.x509_cert else False
         
         # Check if certificate uses traditional algorithms
-        has_traditional = not has_pqc or self._has_traditional_algorithms()
+        has_traditional = not has_pqc or self._has_traditional_algorithms() if self.x509_cert else False
         
         if has_pqc and has_traditional:
             return CertificateType.HYBRID
@@ -62,18 +88,18 @@ class Certificat:
 
     def _has_traditional_algorithms(self) -> bool:
         """Check if certificate uses traditional cryptographic algorithms"""
-        sig_oid = self._x509_cert.signature_algorithm_oid
+        sig_oid = self.x509_cert.signature_algorithm_oid if self.x509_cert else None
         # List of common traditional algorithm OIDs (RSA, ECDSA, etc.)
         traditional_oids = [
             x509.oid.SignatureAlgorithmOID.RSA_WITH_SHA256,
             x509.oid.SignatureAlgorithmOID.ECDSA_WITH_SHA256,
             # Add other traditional algorithm OIDs as needed
         ]
-        return sig_oid in traditional_oids
+        return sig_oid in traditional_oids if self.x509_cert else False
 
     def get_all_oids(self) -> List[x509.ObjectIdentifier]:
         """Get all OIDs used in the certificate"""
-        oids = [self._x509_cert.signature_algorithm_oid]
+        oids = [self.x509_cert.signature_algorithm_oid] if self.x509_cert else []
         oids.extend(self.get_extension_oids())
         return oids
 
@@ -92,18 +118,13 @@ class Certificat:
             return None
             
         pqc_info = {}
-        for algo_name, oid in self.PQC_OIDS.items():
+        for algo_name, oid in PQC_OIDS.items():
             if oid in self.get_all_oids():
                 pqc_info[algo_name] = {
                     'oid': oid,
                     'extensions': self.get_extension(oid)
                 }
         return pqc_info
-
-    @property
-    def x509_cert(self) -> x509.Certificate:
-        """Get the underlying X.509 certificate"""
-        return self._x509_cert
 
     @property
     def validation_results(self) -> Dict[str, Dict[str, Any]]:
@@ -159,13 +180,15 @@ class Certificat:
             Optional[x509.Extension]: The extension if found, None otherwise
         """
         try:
-            return self._x509_cert.extensions.get_extension_for_oid(oid)
+            return self.x509_cert.extensions.get_extension_for_oid(oid)
         except x509.ExtensionNotFound:
             return None
 
     def get_public_key(self):
         """Get the certificate's public key"""
-        return self._x509_cert.public_key()
+        if self.x509_cert:
+            return self.x509_cert.public_key()
+        return None
 
     def __str__(self) -> str:
         """String representation of the certificate"""
@@ -173,15 +196,15 @@ class Certificat:
     
     def get_issuer_name(self):
         """Get the issuer name of the certificate"""
-        return self._x509_cert.issuer.rfc4514_string()
+        return self.x509_cert.issuer.rfc4514_string()
 
     def get_subject_name(self):
         """Get the subject name of the certificate"""
-        return self._x509_cert.subject.rfc4514_string()
+        return self.x509_cert.subject.rfc4514_string()
 
     def get_serial_number(self):
         """Get the serial number of the certificate"""
-        return self._x509_cert.serial_number
+        return self.x509_cert.serial_number
     
     def get_validity_period(self):
         """Get the validity period of the certificate"""
@@ -192,31 +215,42 @@ class Certificat:
     
     def get_signature(self):
         """Get the signature of the certificate"""
-        return self._x509_cert.signature
+        return self.x509_cert.signature
     
     def get_signature_algorithm(self):  
         """Get the signature algorithm of the certificate"""
-        return self._x509_cert.signature_algorithm
+        if self.x509_cert:
+            return self.x509_cert.signature_algorithm_oid
+        return None
     
     def get_version(self):
         """Get the version of the certificate"""
-        return self._x509_cert.version  
+        return self.x509_cert.version  
     
     def get_extensions(self):
         """Get the extensions of the certificate"""
-        return self._x509_cert.extensions
+        return self.x509_cert.extensions
     
     def get_extension_oids(self):   
         """Get the OIDs of the extensions of the certificate"""
-        return [extension.oid for extension in self._x509_cert.extensions]
+        return [extension.oid for extension in self.x509_cert.extensions]
 
     def get_extension_values(self):
         """Get the values of the extensions of the certificate"""
-        return {extension.oid: extension.value for extension in self._x509_cert.extensions}
+        return {extension.oid: extension.value for extension in self.x509_cert.extensions}
     
     def get_extension_critical(self):   
         """Get the criticality of the extensions of the certificate"""
-        return {extension.oid: extension.critical for extension in self._x509_cert.extensions}
+        return {extension.oid: extension.critical for extension in self.x509_cert.extensions}
     
- 
+    # Add compatibility properties for UTC dates
+    @property
+    def not_valid_before_utc(self):
+        """Get the not_valid_before date in UTC (compatibility with x509.Certificate)"""
+        return self.not_valid_before
+        
+    @property
+    def not_valid_after_utc(self):
+        """Get the not_valid_after date in UTC (compatibility with x509.Certificate)"""
+        return self.not_valid_after
 

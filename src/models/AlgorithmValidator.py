@@ -50,7 +50,7 @@ class AlgorithmValidator(DecoratorValidador):
             except ValueError:
                 return False, "Invalid PEM certificate format"
         elif isinstance(certificate, Certificat):
-            cert = certificate.cert
+            cert = certificate.x509_cert
         else:
             cert = certificate
 

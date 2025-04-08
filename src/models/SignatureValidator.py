@@ -11,6 +11,8 @@ from models.ValidatorDeBase import ValidatorDeBase
 from utils.logger_config import setup_logger
 from models.certificat import Certificat, CertificateType
 from typing import Optional, Union
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import ec
 
 # Set up logger for this module
 logger = setup_logger(__name__)
@@ -29,7 +31,7 @@ class SignatureValidator(DecoratorValidador):
             validator_decoree = ValidatorDeBase()
         super().__init__(validator_decoree)
 
-    def validate(self, certificate: Union[Certificat, str, x509.Certificate], issuer_cert: Optional[Certificat] = None) -> tuple[bool, str]:
+    def validate(self, certificate: Union[Certificat, str, x509.Certificate]) -> tuple[bool, str]:
         """Validate the certificate's signature.
         
         Args:
@@ -39,21 +41,43 @@ class SignatureValidator(DecoratorValidador):
         Returns:
             tuple[bool, str]: (is_valid, message)
         """
+        
         try:
-            # Convert input to Certificat object if needed
+            # Ensure certificate is a Certificat object
             cert = self._ensure_certificate_object(certificate)
             if not cert:
                 return False, "Invalid certificate format or conversion failed"
 
+            logger.debug(f"[DEBUG] Starting signature validation for certificate: {cert.get_issuer_name()}")
             logger.debug(f"Starting signature validation for certificate: {cert.subject}")
+
             
             # Log certificate details
             logger.debug(f"Certificate type: {cert.certificate_type.value}")
             logger.debug(f"Signature algorithm: {cert.x509_cert.signature_algorithm_oid}")
             logger.debug(f"Public key type: {type(cert.get_public_key()).__name__}")
             
+
+            # Get certificate type
+            cert_type = cert.certificate_type
+            logger.debug(f"Certificate type: {cert_type.value}")
+
+            # Get signature algorithm
+            sig_algorithm = cert.get_signature_algorithm()
+            logger.debug(f"Signature algorithm: {sig_algorithm}")
+
+            # Get public key
+            public_key = cert.get_public_key()
+            logger.debug(f"Public key type: {type(public_key).__name__}")
+
+            if not public_key:
+                return False, 'No public key found in certificate'
+
+            # Convert input to Certificat object if needed
+            
             # If no issuer certificate provided, try to fetch it
-            if not issuer_cert and cert.certificate_type == CertificateType.TRADITIONAL:
+            issuer_cert = None
+            if cert_type == CertificateType.TRADITIONAL:
                 logger.debug("No issuer certificate provided, attempting to fetch from AIA")
                 issuer_cert = self._get_issuer_certificate(cert)
                 if not issuer_cert:
@@ -65,15 +89,86 @@ class SignatureValidator(DecoratorValidador):
                 return False, "Base validation failed"
 
             # Validate based on certificate type
-            if cert.certificate_type == CertificateType.TRADITIONAL:
+            """if cert_type == CertificateType.TRADITIONAL:
                 valid = self._validate_traditional(cert, issuer_cert)
                 return valid, "Traditional signature validation successful" if valid else "Traditional signature validation failed"
-            elif cert.certificate_type == CertificateType.PQC:
+            elif cert_type == CertificateType.PQC:
                 valid = self._validate_pqc(cert, issuer_cert)
                 return valid, "PQC signature validation successful" if valid else "PQC signature validation failed"
             else:  # HYBRID
                 valid = self._validate_hybrid(cert, issuer_cert)
-                return valid, "Hybrid signature validation successful" if valid else "Hybrid signature validation failed"
+                return valid, "Hybrid signature validation successful" if valid else "Hybrid signature validation failed"""
+            
+            if isinstance(public_key, ec.EllipticCurvePublicKey):
+                logger.debug(f"Elliptic curve: {public_key.curve.name}")
+                logger.debug("Using ECDSA signature verification")
+
+                issuer_cert = self._get_issuer_certificate(cert)
+                if not issuer_cert:
+                    return {
+                        'valid': False,
+                        'message': 'Could not verify signature: No issuer certificate available'
+                    }
+                
+                try:
+
+                    # Get the appropriate signature algorithm
+                    sig_algorithm = self._get_signature_algorithm(cert)
+                    if not sig_algorithm:
+                        return {
+                            'valid': False,
+                            'message': 'Unsupported signature algorithm'
+                            
+                        }
+                    
+                    issuer_cert.x509_cert.public_key().verify(
+                        cert.x509_cert.signature,
+                        cert.x509_cert.tbs_certificate_bytes,
+                        ec.ECDSA(cert.x509_cert.signature_hash_algorithm)
+                    )
+                    return {
+                        'valid': True,
+                        'message': 'Signature verified successfully'
+                    }
+                except Exception as e:
+                    logger.warning(f"ECDSA signature verification failed: {str(e)}")
+                    return {
+                        'valid': False,
+                        'message': f'ECDSA signature verification failed: {str(e)}'
+                    }
+            elif isinstance(public_key, rsa.RSAPublicKey):
+                logger.debug("Using RSA signature verification")
+                try:
+                    # Get the appropriate signature algorithm
+                    sig_algorithm = self._get_signature_algorithm(cert)
+                    if not sig_algorithm:
+                        return {
+                            'valid': False,
+                            'message': 'Unsupported signature algorithm'
+                        }
+                    
+                    # for RSA, we need to use PKCS1v15 padding
+                    public_key.verify(
+                        cert.x509_cert.signature,
+                        cert.x509_cert.tbs_certificate_bytes,
+                        padding.PKCS1v15(),
+                        cert.x509_cert.signature_hash_algorithm
+                    )
+                    return {
+                        'valid': True,
+                        'message': 'Signature verified successfully'
+                    }
+                except Exception as e:
+                    logger.warning(f"RSA signature verification failed: {str(e)}")
+                    return {
+                        'valid': False,
+                        'message': f'RSA signature verification failed: {str(e)}'
+                    }
+            else:
+                return {
+                    'valid': False,
+                    'message': f'Unsupported key type: {type(public_key).__name__}'
+                }
 
         except Exception as e:
             error_msg = f"Error during signature validation: {str(e)}"
@@ -92,7 +187,7 @@ class SignatureValidator(DecoratorValidador):
             elif isinstance(certificate, x509.Certificate):
                 return Certificat(certificate)
             else:
-                logger.error(f"Unsupported certificate type: {type(certificate)}")
+                logger.error(f"Unsupported certificate type: {type(certificate)}")  
                 return None
         except Exception as e:
             logger.error(f"Error converting certificate: {str(e)}")
@@ -293,6 +388,9 @@ class SignatureValidator(DecoratorValidador):
         try:
             # Get the AIA extension
             aia = cert.x509_cert.extensions.get_extension_for_oid(x509.oid.ExtensionOID.AUTHORITY_INFORMATION_ACCESS)
+            if not aia:
+                logger.warning("No AIA extension found in certificate")
+                return None
             
             # Look for the CA Issuers URI
             for access_description in aia.value:
@@ -327,3 +425,14 @@ class SignatureValidator(DecoratorValidador):
             logger.error(f"Error fetching issuer certificate: {str(e)}")
             return None
 
+    def _get_signature_algorithm(self, cert: Certificat) -> str:
+        """Get the signature algorithm from the certificate"""
+        sig_oid = cert.x509_cert.signature_algorithm_oid
+
+        # Map OID to algorithm name
+        algorithm_map = {
+            x509.oid.SignatureAlgorithmOID.ECDSA_WITH_SHA256: ec.ECDSA(hashes.SHA256()),
+            x509.oid.SignatureAlgorithmOID.ECDSA_WITH_SHA384: ec.ECDSA(hashes.SHA384()),
+            x509.oid.SignatureAlgorithmOID.ECDSA_WITH_SHA512: ec.ECDSA(hashes.SHA512())
+        }
+        return algorithm_map.get(sig_oid)
