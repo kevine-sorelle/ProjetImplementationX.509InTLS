@@ -12,8 +12,8 @@ d'exécuter des tests unitaires et fonctionnels sur cette implémentation.
 
 ## Architecture du projet
 le projet comporte 2 modules principaux: un module Validator (models) reponsable des opérations de validation et de la vérification des attributs des certificats, un module ServerSecurityAnalyser responsable de la vérification des propriétées de sécurité du certificat recupéré au niveau du module validator.
-un module certificate fetcher et un module certificate Sender request
-![img.png](Images/img.png)
+
+![new_arch.png](Images/new_arch.png)
 
 ## Conception de l'outil
 Dans le cadre de ce projet, plusieurs design pattern(DP) seront utilisés.

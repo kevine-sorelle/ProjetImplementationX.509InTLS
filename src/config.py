@@ -62,11 +62,8 @@ SECURE_ALGORITHMS = {
         },
         'Ed25519': {},  # Ed25519 is considered secure by default
         'Ed448': {}     # Ed448 is considered secure by default
- }
-
-    
-   
-    
+ } 
+      
 # Define deprecated algorithms that should be flagged
 DEPRECATED_ALGORITHMS = {
         'MD5': 'MD5 is cryptographically broken',
@@ -75,4 +72,13 @@ DEPRECATED_ALGORITHMS = {
             'min_key_size': 1024,
             'message': 'RSA keys smaller than 2048 bits are considered insecure'
         }
+}
+
+from cryptography import x509
+"""A wrapper class for X.509 certificates with validation state"""
+    # OIDs for PQC algorithms (example OIDs - these should be updated with actual standardized OIDs)
+PQC_OIDS = {
+    'dilithium': x509.ObjectIdentifier('1.3.6.1.4.1.2.267.7.4.4'),
+    'falcon': x509.ObjectIdentifier('1.3.9999.3.1'),
+    'sphincs': x509.ObjectIdentifier('1.3.9999.6.4.13')
 }
