@@ -4,7 +4,7 @@ from models.certificat import Certificat
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa, ec
-from datetime import datetime
+from datetime import datetime, timezone
 from utils.logger_config import setup_logger
 
 # Set up logger for this module
@@ -63,13 +63,13 @@ class CertificateInfoExtractor:
                 info['not_before'] = cert_obj.x509_cert.not_valid_before_utc.strftime('%Y-%m-%d')
                 info['not_after'] = cert_obj.x509_cert.not_valid_after_utc.strftime('%Y-%m-%d')
             
-                # Calculate days remaining
-                now = datetime.now()
-                logger.debug(f"[DEBUG] Now: {now}")
-                logger.debug(f"[DEBUG] Not valid after: {cert_obj.x509_cert.not_valid_after_utc}")
-                days_remaining = (cert_obj.x509_cert.not_valid_after_utc - now).days
+                # Calculate days remaining using timezone-aware current time
+                now_utc = datetime.now(timezone.utc)
+                logger.debug(f"[DEBUG] Now (UTC): {now_utc}")
+                logger.debug(f"[DEBUG] Not valid after (UTC): {cert_obj.x509_cert.not_valid_after_utc}")
+                days_remaining = (cert_obj.x509_cert.not_valid_after_utc - now_utc).days
                 info['days_remaining'] = max(0, days_remaining)
-                logger.debug(f"[DEBUG] Days remaining: {days_remaining}")
+                logger.debug(f"[DEBUG] Days remaining calculated: {info['days_remaining']}")
             else:
                 logger.warning("Invalid certificate validity period: not_valid_before or not_valid_after is None")
                 info['not_before'] = 'Unknown'
@@ -100,7 +100,7 @@ class CertificateInfoExtractor:
                 info['signature_algorithm'] = 'Unknown'
             
         except Exception as e:
-            logger.error(f"Error extracting certificate info: {str(e)}")
+            logger.error(f"Error extracting certificate info: {str(e)}", exc_info=True)
             # Set default values if extraction fails
             info.setdefault('subject_cn', 'Unknown')
             info.setdefault('subject_o', 'Unknown')
