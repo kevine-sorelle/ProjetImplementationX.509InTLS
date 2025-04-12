@@ -18,7 +18,7 @@ def test_index_post_performance(benchmark, client):
     test_data = {
         'hostname': 'facebook.com',
         'port': 443,
-        'validators': ['SignatureValidator', 'KeyValidator', 'IssuerValidator', 'DateValidator', 'RevocationValidator', 'ExtensionValidator', 'AlgorithmValidator']
+        'validators': ['signature', 'key', 'issuer', 'date', 'revocation', 'extension', 'algorithm', 'subject']
     }
 
     def do_request():
