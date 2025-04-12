@@ -2,6 +2,7 @@ from cryptography.hazmat.primitives import serialization
 from flask import Flask, request, render_template, send_file, session, redirect, url_for, flash
 import sys
 sys.path.append("src")
+from models.KEM import KEM
 from models.certificat import Certificat
 from models.validatorInterface import ValidatorInterface
 from facade.ServerSecurityFacade import ServerSecurityFacade
@@ -21,6 +22,8 @@ from factrory.SecurityAnalyzerFactory import SecurityAnalyzerFactory
 from strategy.CertificateBasedAnalyzer import CertificateBasedAnalyzer
 from strategy.StandardSecurityAnalyzer import StandardSecurityAnalyzer
 from utils.logger_config import setup_logger
+from models.keyGenerator import KeyGenerator
+from models.CertificateGenerator import CertificateGenerator
 
 # Set up logger for this module
 logger = setup_logger(__name__)
@@ -175,22 +178,129 @@ def tests():
         test_results["error"] = str(e)
     return render_template("pages/tests.html", test_results=test_results)
 
+@app.route("/generator", methods=["GET", "POST"])
+def generator():
+    """Page de génération de certificat"""
+    if request.method == "POST":
+        try:
+            # Get form data
+            subject = request.form.get('subject')
+            organization = request.form.get('organization')
+            country = request.form.get('country')
+            validity_days = int(request.form.get('validity_days', 365))
+            key_size = int(request.form.get('key_size', 256))  # Default to 256 for EC keys
+            include_kem = request.form.get('include_kem') == 'on'
 
-@app.route("/download", methods=["GET", "POST"])
+            # Generate certificate using the CertificateGenerator
+            cert_generator = CertificateGenerator()
+            cert_data = cert_generator.generate_certificate(
+                subject=subject,
+                organization=organization,
+                country=country,
+                validity_days=validity_days,
+                key_size=key_size,
+                include_kem=include_kem
+            )
+            
+            # Store the generated certificate in the session
+            session["generated_certificate"] = cert_data['certificate']
+            session["generated_private_key"] = cert_data['private_key']
+            session["generated_kem_public_key"] = cert_data['kem_public_key']
+            session["generated_kem_private_key"] = cert_data['kem_private_key']
+            session["generated_cert_info"] = {
+                "subject": subject,
+                "organization": organization,
+                "country": country,
+                "validity_days": validity_days,
+                "key_size": key_size,
+                "include_kem": include_kem
+            }
+
+            return render_template('pages/generator.html',
+                                cert_pem=cert_data['certificate'],
+                                private_key=cert_data['private_key'],
+                                kem_public_key=cert_data['kem_public_key'],
+                                kem_private_key=cert_data['kem_private_key'],
+                                subject=subject,
+                                organization=organization,
+                                country=country,
+                                validity_days=validity_days,
+                                key_size=key_size,
+                                include_kem=include_kem)
+        except Exception as e:
+            logger.error(f"Error in certificate generation: {str(e)}", exc_info=True)
+            flash(str(e), "error")
+            return render_template('pages/generator.html')
+
+    return render_template('pages/generator.html')
+
+@app.route("/download", methods=["GET"])
 def download():
-    """Permettre aux utilisateurs de télécharger le certificat généré."""
-    # Get the certificate from the session
+    """Permettre aux utilisateurs de télécharger le certificat stocké en session."""
+    # Get the certificate and related data from the session
     cert = session.get("certificate", None)
+    hostname = session.get("hostname", "Unknown")
+    port = session.get("port", 443)
+    
     if not cert:
-        return "No certificate found in session", 404
+        flash("Aucun certificat n'est disponible pour le téléchargement. Veuillez d'abord valider un certificat ou analyser la sécurité d'un serveur.", "warning")
+        return render_template("pages/download.html", certificate=None)
     
-    # Create a temporary file to store the certificate
-    temp_path = os.path.join(os.path.dirname(__file__), "temp_cert.pem")
-    with open(temp_path, "w") as f:
-        f.write(cert)
+    try:
+        # Create a temporary file to store the certificate
+        temp_path = os.path.join(os.path.dirname(__file__), "temp_cert.pem")
+        with open(temp_path, "w") as f:
+            f.write(cert)
+        
+        # Generate a meaningful filename
+        filename = f"certificate_{hostname}_{port}.pem"
+        
+        # Send the file
+        return send_file(
+            temp_path, 
+            as_attachment=True, 
+            download_name=filename,
+            mimetype="application/x-pem-file"
+        )
+    except Exception as e:
+        logger.error(f"Error in download route: {str(e)}", exc_info=True)
+        flash(f"Erreur lors du téléchargement du certificat: {str(e)}", "error")
+        return render_template("pages/download.html", 
+                              certificate=cert, 
+                              hostname=hostname, 
+                              port=port)
+
+@app.route("/download-generated", methods=["GET"])
+def download_generated():
+    """Permettre aux utilisateurs de télécharger le certificat généré."""
+    # Get the generated certificate and related data from the session
+    cert = session.get("generated_certificate", None)
+    cert_info = session.get("generated_cert_info", {})
     
-    # Send the file
-    return send_file(temp_path, as_attachment=True, download_name="certificate.pem")
+    if not cert:
+        flash("Aucun certificat généré n'est disponible pour le téléchargement. Veuillez d'abord générer un certificat.", "warning")
+        return redirect(url_for('generator'))
+    
+    try:
+        # Create a temporary file to store the certificate
+        temp_path = os.path.join(os.path.dirname(__file__), "temp_generated_cert.pem")
+        with open(temp_path, "w") as f:
+            f.write(cert)
+        
+        # Generate a meaningful filename
+        filename = f"generated_certificate_{cert_info.get('subject', 'unknown')}.pem"
+        
+        # Send the file
+        return send_file(
+            temp_path, 
+            as_attachment=True, 
+            download_name=filename,
+            mimetype="application/x-pem-file"
+        )
+    except Exception as e:
+        logger.error(f"Error in download_generated route: {str(e)}", exc_info=True)
+        flash(f"Erreur lors du téléchargement du certificat généré: {str(e)}", "error")
+        return redirect(url_for('generator'))
 
 if __name__ == "__main__":
     app.run(debug=True)
