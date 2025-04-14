@@ -3,18 +3,43 @@
 <div class="container py-4">
     <h1 class="mb-4">Certificate Validator</h1>
 
-    <form method="post" class="mb-4" id="validatorForm">
+    <form method="post" class="mb-4" id="validatorForm" enctype="multipart/form-data">
         <div class="card">
             <div class="card-body">
                 <div class="mb-3">
-                    <label for="hostname" class="form-label">Server Name or Address</label>
-                    <input type="text" class="form-control" id="hostname" name="hostname" 
-                           placeholder="Enter domain (e.g. google.com)" required>
+                    <label class="form-label">Validation Method</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="validation_type" id="hostname" value="hostname" checked>
+                        <label class="form-check-label" for="hostname">
+                            Validate by Hostname
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="validation_type" id="file" value="file">
+                        <label class="form-check-label" for="file">
+                            Validate by Certificate File
+                        </label>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label for="port" class="form-label">Port Number</label>
-                    <input type="number" class="form-control" id="port" name="port" 
-                           placeholder="Enter port number (e.g. 443)" value="443">
+
+                <div id="hostnameFields">
+                    <div class="mb-3">
+                        <label for="hostname" class="form-label">Server Name or Address</label>
+                        <input type="text" class="form-control" id="hostname" name="hostname" 
+                               placeholder="Enter domain (e.g. google.com)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="port" class="form-label">Port Number</label>
+                        <input type="number" class="form-control" id="port" name="port" 
+                               placeholder="Enter port number (e.g. 443)" value="443">
+                    </div>
+                </div>
+
+                <div id="fileFields" style="display: none;">
+                    <div class="mb-3">
+                        <label for="certificate_file" class="form-label">Certificate File</label>
+                        <input type="file" class="form-control" id="certificate_file" name="certificate_file" accept=".pem,.crt,.cer">
+                    </div>
                 </div>
                 
                 <div class="mb-3">
@@ -37,7 +62,7 @@
                 
                 <div class="d-flex justify-content-between">
                     <button type="submit" class="btn btn-primary">Validate Certificate</button>
-                    {% if hostname %}
+                    {% if hostname and hostname != "file_upload" %}
                     <a href="{{ url_for('server_security', hostname=hostname, port=port) }}" class="btn btn-info">View Server Security Dashboard</a>
                     {% endif %}
                 </div>
@@ -59,12 +84,36 @@
             </div>
         </div>
         
+        {% if hostname and hostname != "file_upload" %}
         <div class="mt-3 text-center">
             <a href="{{ url_for('server_security', hostname=hostname, port=port) }}" class="btn btn-lg btn-success">
                 View Detailed Security Analysis
             </a>
         </div>
+        {% endif %}
     </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const hostnameRadio = document.getElementById('hostname');
+    const fileRadio = document.getElementById('file');
+    const hostnameFields = document.getElementById('hostnameFields');
+    const fileFields = document.getElementById('fileFields');
+
+    function toggleFields() {
+        if (hostnameRadio.checked) {
+            hostnameFields.style.display = 'block';
+            fileFields.style.display = 'none';
+        } else {
+            hostnameFields.style.display = 'none';
+            fileFields.style.display = 'block';
+        }
+    }
+
+    hostnameRadio.addEventListener('change', toggleFields);
+    fileRadio.addEventListener('change', toggleFields);
+});
+</script>
 {% endblock %}

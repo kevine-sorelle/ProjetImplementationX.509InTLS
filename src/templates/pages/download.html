@@ -6,7 +6,7 @@
 <div class="container mt-4">
   <h1 class="mb-4">Téléchargeur de Certificat</h1>
 
-  {% if certificate %}
+  {% if certificate or generated_certificate %}
     <!-- Vue d'ensemble -->
     <div class="row mb-4">
       <div class="col">
@@ -14,19 +14,32 @@
           <div class="card-body">
             <h5 class="card-title">Vue d'ensemble</h5>
             <div class="row">
-              <div class="col-md-3">
-                <div class="alert alert-info">
-                  <strong>Serveur:</strong> {{ hostname }}
+              {% if certificate %}
+                <div class="col-md-3">
+                  <div class="alert alert-info">
+                    <strong>Serveur:</strong> {{ hostname }}
+                  </div>
                 </div>
-              </div>
-              <div class="col-md-3">
-                <div class="alert alert-info">
-                  <strong>Port:</strong> {{ port }}
+                <div class="col-md-3">
+                  <div class="alert alert-info">
+                    <strong>Port:</strong> {{ port }}
+                  </div>
                 </div>
-              </div>
+              {% else %}
+                <div class="col-md-3">
+                  <div class="alert alert-info">
+                    <strong>Sujet:</strong> {{ cert_info.subject }}
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="alert alert-info">
+                    <strong>Organisation:</strong> {{ cert_info.organization }}
+                  </div>
+                </div>
+              {% endif %}
               <div class="col-md-3">
                 <div class="alert alert-success">
-                  <strong>Type:</strong> Certificat Serveur
+                  <strong>Type:</strong> {% if certificate %}Certificat Serveur{% else %}Certificat Généré{% endif %}
                 </div>
               </div>
               <div class="col-md-3">
@@ -45,20 +58,27 @@
       <div class="card-body">
         <h5 class="card-title">Télécharger le Certificat</h5>
         <p class="card-text">Cliquez sur le bouton ci-dessous pour télécharger le certificat au format PEM.</p>
-        <a href="{{ url_for('download') }}" class="btn btn-primary">
-          <i class="fas fa-download"></i> Télécharger le Certificat
-        </a>
+        {% if certificate %}
+          <a href="{{ url_for('download') }}" class="btn btn-primary">
+            <i class="fas fa-download"></i> Télécharger le Certificat Validé
+          </a>
+        {% else %}
+          <a href="{{ url_for('download_generated') }}" class="btn btn-primary">
+            <i class="fas fa-download"></i> Télécharger le Certificat Généré
+          </a>
+        {% endif %}
       </div>
     </div>
   {% else %}
     <!-- No Certificate Available -->
     <div class="alert alert-warning">
       <h4 class="alert-heading">Aucun certificat disponible</h4>
-      <p>Aucun certificat n'est disponible pour le téléchargement. Veuillez d'abord valider un certificat ou analyser la sécurité d'un serveur.</p>
+      <p>Aucun certificat n'est disponible pour le téléchargement. Veuillez d'abord valider un certificat, analyser la sécurité d'un serveur, ou générer un nouveau certificat.</p>
       <hr>
       <p class="mb-0">
         <a href="{{ url_for('index') }}" class="btn btn-primary">Valider un Certificat</a>
         <a href="{{ url_for('server_security') }}" class="btn btn-secondary">Analyser un Serveur</a>
+        <a href="{{ url_for('generator') }}" class="btn btn-info">Générer un Certificat</a>
       </p>
     </div>
   {% endif %}
