@@ -18,12 +18,12 @@ import os
 
 from models.ValidatorFactory import ValidatorFactory
 from models.ValidationStrategy import ValidationStrategy
-from factrory.SecurityAnalyzerFactory import SecurityAnalyzerFactory
+from factory.SecurityAnalyzerFactory import SecurityAnalyzerFactory
 from strategy.CertificateBasedAnalyzer import CertificateBasedAnalyzer
 from strategy.StandardSecurityAnalyzer import StandardSecurityAnalyzer
 from utils.logger_config import setup_logger
 from models.keyGenerator import KeyGenerator
-from models.CertificateGenerator import CertificateFactory
+from factory.CertificateFactory import CertificateFactory
 from adaptator.CertificateAdapterFactory import CertificateAdapterFactory
 
 # Set up logger for this module
