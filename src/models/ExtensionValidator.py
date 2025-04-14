@@ -4,7 +4,7 @@ from cryptography.x509 import ExtensionNotFound
 from cryptography.hazmat.backends import default_backend
 import sys
 sys.path.append("src")
-from models.decoratorValidador import DecoratorValidador
+from decorator.decoratorValidator import DecoratorValidator
 from models.ValidatorDeBase import ValidatorDeBase
 from utils.logger_config import setup_logger
 from models.certificat import Certificat
@@ -13,7 +13,7 @@ from typing import Union, Optional, Tuple
 # Set up logger for this module
 logger = setup_logger(__name__)
 
-class ExtensionValidator(DecoratorValidador):
+class ExtensionValidator(DecoratorValidator):
     """Validator for certificate extensions"""
 
     def __init__(self, validator_decoree=None):

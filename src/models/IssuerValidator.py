@@ -4,19 +4,19 @@ from cryptography.hazmat.backends import default_backend
 from typing import Union, Tuple
 import sys
 sys.path.append("src")
-from models.decoratorValidador import DecoratorValidador
+from decorator.decoratorValidator import DecoratorValidator
 from models.certificat import Certificat
 from utils.logger_config import setup_logger
 
 logger = setup_logger(__name__)
 
-class IssuerValidator(DecoratorValidador):
+class IssuerValidator(DecoratorValidator):
     """def __init__(self, name, value, type, certificate, validation_rules=None):
         super().__init__(name, value, type, certificate)
         self.validation_rules = validation_rules if validation_rules else {}"""
 
 
-    def __init__(self, validator_decoree: DecoratorValidador):
+    def __init__(self, validator_decoree: DecoratorValidator):
         super().__init__(validator_decoree)
 
 

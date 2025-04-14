@@ -3,12 +3,12 @@ from cryptography import x509
 import sys
 sys.path.append("src")
 from  config import DEPRECATED_ALGORITHMS, SECURE_ALGORITHMS
-from .decoratorValidador import DecoratorValidador
-from .certificat import Certificat
-from .ValidatorDeBase import ValidatorDeBase
+from decorator.decoratorValidator import DecoratorValidator
+from models.certificat import Certificat
+from models.ValidatorDeBase import ValidatorDeBase
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-class AlgorithmValidator(DecoratorValidador):
+class AlgorithmValidator(DecoratorValidator):
     """
     Validator that checks if the certificate's signature algorithm is secure.
     Implements the Decorator pattern to add algorithm validation to other validators.

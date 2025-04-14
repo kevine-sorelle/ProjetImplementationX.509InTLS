@@ -6,13 +6,13 @@ import requests
 import base64
 from utils.logger_config import setup_logger
 from models.certificat import Certificat
-from models.decoratorValidador import DecoratorValidador
+from decorator.decoratorValidator import DecoratorValidator
 from models.ValidatorDeBase import ValidatorDeBase
 from typing import List, Tuple, Union, Optional
 
 logger = setup_logger(__name__)
 
-class RevocationValidator(DecoratorValidador):
+class RevocationValidator(DecoratorValidator):
     """Validator for checking certificate revocation status."""
 
     def __init__(self, validator_decoree=None):

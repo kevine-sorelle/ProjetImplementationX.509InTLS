@@ -5,12 +5,12 @@ from models.certificat import Certificat
 from models.ValidatorDeBase import ValidatorDeBase
 import sys
 sys.path.append("src")
-from models.decoratorValidador import DecoratorValidador
+from decorator.decoratorValidator import DecoratorValidator
 from utils.logger_config import setup_logger
 
 logger = setup_logger(__name__)
 
-class SubjectValidator(DecoratorValidador):
+class SubjectValidator(DecoratorValidator):
     """Validator for certificate subject fields"""
 
     def __init__(self, validator_decoree=None):

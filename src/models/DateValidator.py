@@ -4,13 +4,13 @@ from datetime import datetime, timezone
 from abc import ABC, abstractmethod
 import sys
 sys.path.append("src")
-from models.decoratorValidador import DecoratorValidador
+from decorator.decoratorValidator import DecoratorValidator
 
 
-class DateValidator(DecoratorValidador):
+class DateValidator(DecoratorValidator):
     """def __init__(self, name, value, type, certificate):
         super().__init__(name, value, type, certificate)"""
-    def __init__(self, validator_decoree: DecoratorValidador):
+    def __init__(self, validator_decoree: DecoratorValidator):
         super().__init__(validator_decoree)
 
 

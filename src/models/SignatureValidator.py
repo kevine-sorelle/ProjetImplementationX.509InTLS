@@ -6,7 +6,7 @@ sys.path.append("src")
 from config import TRUSTED_ISSUERS
 from cryptography.hazmat.primitives.asymmetric.ec import ECDSA, EllipticCurvePublicKey
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
-from models.decoratorValidador import DecoratorValidador
+from decorator.decoratorValidator import DecoratorValidator
 from models.ValidatorDeBase import ValidatorDeBase
 from utils.logger_config import setup_logger
 from models.certificat import Certificat, CertificateType
@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 # Set up logger for this module
 logger = setup_logger(__name__)
 
-class SignatureValidator(DecoratorValidador):
+class SignatureValidator(DecoratorValidator):
     """Validator for certificate signatures using decorator pattern"""
     
     def __init__(self, validator_decoree=None):
@@ -56,7 +56,7 @@ class SignatureValidator(DecoratorValidador):
             logger.debug(f"Certificate type: {cert.certificate_type.value}")
             logger.debug(f"Signature algorithm: {cert.x509_cert.signature_algorithm_oid}")
             logger.debug(f"Public key type: {type(cert.get_public_key()).__name__}")
-            
+
 
             # Get certificate type
             cert_type = cert.certificate_type
