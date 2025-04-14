@@ -302,51 +302,5 @@ def download_generated():
         flash(f"Erreur lors du téléchargement du certificat généré: {str(e)}", "error")
         return redirect(url_for('generator'))
 
-@app.route("/validator", methods=["GET", "POST"])
-def validator():
-    """Page de validation de certificat"""
-    if request.method == "POST":
-        validation_type = request.form.get('validation_type')
-        selected_validators = request.form.getlist('validators')
-        
-        try:
-            # Create appropriate adapter based on validation type
-            adapter = CertificateAdapterFactory.create_adapter(
-                validation_type,
-                hostname=request.form.get('hostname'),
-                port=int(request.form.get('port', 443)),
-                certificate_file=request.files.get('certificate_file')
-            )
-            
-            # Get certificate using adapter
-            certificate = adapter.get_certificate()
-            source_info = adapter.get_source_info()
-            
-            # Store in session for other routes
-            session["certificate"] = certificate
-            session["source_info"] = source_info
-            
-            # Initialize validator
-            validator = CertificateValidator()
-            
-            # Validate the certificate
-            validation_result = validator.validate_certificate(certificate)
-            
-            # Store validation result in session
-            session["validation_result"] = validation_result
-            
-            return render_template('pages/validator.html',
-                                validation_result=validation_result,
-                                certificate=certificate,
-                                source_info=source_info,
-                                selected_validators=selected_validators)
-            
-        except Exception as e:
-            logger.error(f"Error in validator route: {str(e)}", exc_info=True)
-            flash(str(e), "error")
-            return render_template('pages/validator.html')
-    
-    return render_template('pages/validator.html')
-
 if __name__ == "__main__":
     app.run(debug=True)
