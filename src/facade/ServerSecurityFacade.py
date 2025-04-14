@@ -2,7 +2,7 @@ from typing import Dict, Optional
 import sys
 sys.path.append("src")
 from builder.SecurityReportBuilder import SecurityReportBuilder
-from factrory.SecurityAnalyzerFactory import SecurityAnalyzerFactory
+from factory.SecurityAnalyzerFactory import SecurityAnalyzerFactory
 from services.CertificateChainService import CertificateChainService
 from services.CertificateInfoExtractor import CertificateInfoExtractor
 from services.OCSPChecker import OCSPChecker
