@@ -4,7 +4,9 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List
 from enum import Enum
 from utils.logger_config import setup_logger
-from config import PQC_OIDS
+import sys
+sys.path.append("src")
+from config.config import PQC_OIDS
 
 
 # Set up logger for this module

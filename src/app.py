@@ -8,7 +8,7 @@ from models.validatorInterface import ValidatorInterface
 from facade.ServerSecurityFacade import ServerSecurityFacade
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
-from config import SECRET_KEY
+from config.config import SECRET_KEY
 from services.SecurityTest import SecurityTest
 from models.SSLCertificateFetcher import SSLCertificateFetcher
 from models.SSLConnectionManager import SSLConnectionManager
