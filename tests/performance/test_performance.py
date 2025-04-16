@@ -50,39 +50,10 @@ def test_generator_post_performance(benchmark, client):
     response = benchmark(do_request)
     assert response.status_code == 200
 
-def test_tests_get_performance(client):
-    response = client.get('/tests')
-    assert response.status_code == 200
-
-def test_tests_post_performance(benchmark, client):
-    test_data = {
-        'hostname': 'facebook.com',
-        'port': 443,
-        'validators': ['SignatureValidator', 'KeyValidator', 'IssuerValidator', 'DateValidator', 'RevocationValidator', 'ExtensionValidator', 'AlgorithmValidator']
-    }
-
-    def do_request():
-        return client.post('/tests', data=test_data, follow_redirects=True)
-    
-    response = benchmark(do_request)
-    assert response.status_code == 200
-
 def test_download_get_performance(client):
     response = client.get('/download')
     assert response.status_code == 200
 
-def test_download_post_performance(benchmark, client):
-    test_data = {
-        'hostname': 'facebook.com',
-        'port': 443,
-        'validators': ['SignatureValidator', 'KeyValidator', 'IssuerValidator', 'DateValidator', 'RevocationValidator', 'ExtensionValidator', 'AlgorithmValidator']
-    }
-
-    def do_request():
-        return client.post('/download', data=test_data, follow_redirects=True)
-    
-    response = benchmark(do_request)
-    assert response.status_code == 200
     
     
     

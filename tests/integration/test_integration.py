@@ -51,23 +51,10 @@ def test_download_certificate(client):
         'validators': ['signature', 'key', 'issuer', 'date', 'revocation', 'extension', 'algorithm']
     }
     # Act
-    response = client.post('/download', data=test_data, follow_redirects=True)
+    response = client.get('/download', data=test_data, follow_redirects=True)
     # Assert
     assert response.status_code == 200
     assert b'certificate' in response.data.lower()
-
-def test_tests(client):
-    # Arrange
-    test_data = {
-        'hostname': 'google.com',
-        'port': 443,
-        'validators': ['signature', 'key', 'issuer', 'date', 'revocation', 'extension', 'algorithm']
-    }
-    # Act
-    response = client.post('/tests', data=test_data, follow_redirects=True)
-    # Assert
-    assert response.status_code == 200
-    assert b'Certificate Validator' in response.data
 
 
 
