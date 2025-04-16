@@ -28,7 +28,7 @@ def test_get_issuer(setup):
 
     # Act
     issuer = issuer_validator.getIssuer(cert_pem)
-    is_valid = issuer_validator.validate(cert_pem)
+    is_valid, message = issuer_validator.validate(cert_pem)
 
     # Debugging actual issuer
     print(f"Actual issuer: {issuer}")
@@ -40,6 +40,7 @@ def test_get_issuer(setup):
     # Assert
     assert is_valid is True
     assert issuer is not None
+    assert "successful" in message
     for key, value in expected_issuer_parts.items():
         assert issuer_parts.get(key) == value, \
             f"Expected '{key}={value}' but got '{issuer_parts.get(key)}'"

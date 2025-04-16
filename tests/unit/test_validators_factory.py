@@ -5,14 +5,19 @@ from src.models.SSLConnectionManager import SSLConnectionManager
 from src.models.SSLCertificateFetcher import SSLCertificateFetcher
 from src.models.getCertificate import GetCertificate
 from src.models.ValidatorDeBase import ValidatorDeBase
+from cryptography import x509
+
+@pytest.fixture
+def test_issuer_certificate():
+    with open("tests/certs/google_cert_root.pem", "rb") as cert_file:
+        cert_data = cert_file.read()
+        return x509.load_pem_x509_certificate(cert_data)
 
 @pytest.fixture
 def test_certificate():
-    connection = SSLConnectionManager("google.com", 443)
-    fetcher = SSLCertificateFetcher()
-    getter = GetCertificate(connection, fetcher)
-    cert = getter.get_certificate(connection.hostname, connection.port)
-    return cert
+    with open("tests/certs/google_cert_chain.pem", "rb") as cert_file:
+        cert_data = cert_file.read()
+        return x509.load_pem_x509_certificate(cert_data)
 
 
 @pytest.fixture
@@ -34,10 +39,12 @@ def test_signature_validator(setup):
     certificate = setup[7]
 
     # Act
-    result, message  = validator.validate(certificate)
+    result, message = validator.validate(certificate)
 
     # Assert
-    assert result is True
+    assert isinstance(result, bool), "Validation result should be a boolean"
+    assert isinstance(message, str), "Validation message should be a string"
+    assert result is True, f"Signature validation failed: {message}"
 
 
 def test_key_validator(setup):
@@ -79,10 +86,11 @@ def test_issuer_validator(setup):
     certificate = setup[7]
 
     # Act
-    result = validator.validate(certificate)
+    result, message = validator.validate(certificate)
 
     # Assert
     assert result is True
+    assert "successful" in message
 
 def test_date_validator(setup):
     # Arrange
@@ -94,7 +102,7 @@ def test_date_validator(setup):
 
     # Assert    
     assert result is True
-
+    # assert "successful" in message
 
 
 def test_algorithm_validator(setup):
