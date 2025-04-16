@@ -44,11 +44,28 @@ clean-venv:
 run:
 	python src/app.py
 
-install:
-	pip install -r requirements-dev.txt
-
 test:
 	pytest tests/ -v
+
+# Set up tests certs (Download google.com and store its cert chain)
+setup:
+ifeq ($(OS),Windows_NT)
+	@echo "Setting up test certificates for Windows..."
+	if not exist tests\certs mkdir tests\certs
+	powershell -Command "echo '' | openssl s_client -connect google.com:443 -servername google.com -showcerts | Out-File -FilePath tests\certs\google_certs.txt -Encoding ASCII"
+	powershell -Command "$$lines = Get-Content tests\certs\google_certs.txt; $$certs = @(); $$inside = $$false; $$current = @(); foreach ($$line in $$lines) { if ($$line -match '-----BEGIN CERTIFICATE-----') { $$inside = $$true; $$current = @(); }; if ($$inside) { $$current += $$line }; if ($$line -match '-----END CERTIFICATE-----') { $$inside = $$false; $$certs += ,(@($$current) -join \"`n\") } }; $$i = 1; foreach ($$cert in $$certs) { $$cert | Out-File -FilePath (\"tests\\certs\\google_cert_$$i.pem\") -Encoding ASCII; $$i++ }"
+	move tests\certs\google_cert_1.pem tests\certs\google_cert_chain.pem
+	move tests\certs\google_cert_2.pem tests\certs\google_cert_root.pem
+	del tests\certs\google_certs.txt
+else
+	@echo "Setting up test certificates for Unix/Linux..."
+	mkdir -p tests/certs
+	openssl s_client -connect google.com:443 -servername google.com -showcerts < /dev/null 2>/dev/null \
+	| awk '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/{print}' \
+	| awk 'BEGIN{c=0} /-----END CERTIFICATE-----/ {c++} {print > "tests/certs/google_cert_" c ".pem"}'
+	mv tests/certs/google_cert_1.pem tests/certs/google_cert_chain.pem
+	mv tests/certs/google_cert_2.pem tests/certs/google_cert_root.pem
+endif
 
 test-unit:
 	pytest tests/unit/ -v
@@ -91,3 +108,4 @@ clean:
 	find . -type d -name ".pytest_cache" -exec rm -r {} +
 	find . -type d -name ".mypy_cache" -exec rm -r {} +
 	find . -type d -name "htmlcov" -exec rm -r {} +
+	rm -rf tests/__pycache__*.pyc
