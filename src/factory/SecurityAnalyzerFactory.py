@@ -1,12 +1,17 @@
 import sys
 sys.path.append("src")
 
+from strategy.CertificateBasedAnalyzer import CertificateBasedAnalyzer
+from strategy.StandardSecurityAnalyzer import StandardSecurityAnalyzer
 from strategy.SecurityAnalysisStrategy import SecurityAnalysisStrategy
 from typing import Type, List, Dict, Optional
 
 
 class SecurityAnalyzerFactory:
-    _analyzers = {}
+    _analyzers = {
+        'standard': StandardSecurityAnalyzer,
+        'certificate': CertificateBasedAnalyzer
+    }
 
     @classmethod
     def register_analyzer(cls, name: str, analyzer_class: Type[SecurityAnalysisStrategy]) -> None:

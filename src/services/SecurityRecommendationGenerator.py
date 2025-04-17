@@ -7,98 +7,189 @@ logger = setup_logger(__name__)
 
 
 class SecurityRecommendationGenerator:
-    @staticmethod
-    def generate_recommendations(cert_info: Dict, validation_results: Dict, protocol_version: str, cipher: tuple) -> List:
+    def __init__(self):
+        self.min_key_size = {
+            'RSA': 2048,
+            'EC': 256,
+            'DSA': 2048
+        }
+        self.recommended_signature_algorithms = [
+            'sha256WithRSAEncryption',
+            'sha384WithRSAEncryption',
+            'sha512WithRSAEncryption',
+            'ecdsa-with-SHA256',
+            'ecdsa-with-SHA384',
+            'ecdsa-with-SHA512'
+        ]
+        self.recommended_protocols = ['TLSv1.2', 'TLSv1.3']
+
+    def generate_recommendations(self, server_info: Dict, cert_info: Dict, 
+                               chain_valid: bool, ocsp_status: Dict) -> List[Dict]:
         """
-        Generate security recommendations based on the analysis.
+        Generate security recommendations based on the analysis results.
         
         Args:
-            cert_info: Certificate information
-            validation_results: Validation results
-            protocol_version: TLS protocol version
-            cipher: Cipher information
+            server_info: Dictionary containing server information
+            cert_info: Dictionary containing certificate information
+            chain_valid: Boolean indicating if the certificate chain is valid
+            ocsp_status: Dictionary containing OCSP status information
             
         Returns:
-            list: List of security recommendations
+            List of recommendations, each containing severity and description
         """
         recommendations = []
         
-        # Check certificate expiration
-        days_remaining = cert_info.get('days_remaining', 0)
-        logger.debug(f"Certificate expiration: {days_remaining} days remaining")
+        # Check certificate chain validity
+        if not chain_valid:
+            recommendations.append({
+                'severity': 'HIGH',
+                'category': 'Certificate Chain',
+                'description': 'Certificate chain validation failed. Ensure all intermediate certificates are properly installed.'
+            })
 
-        # If days_remaining is 0 but we have date strings, calculate it manually
-        if days_remaining == 0 and 'not_after' in cert_info and cert_info['not_after'] != 'Unknown': 
-            try:
-                # Parse the date string (assuming format YYYY-MM-DD)
-                not_after_date = datetime.strptime(cert_info['not_after'], '%Y-%m-%d')
-                today = datetime.now()
-                days_remaining = (not_after_date - today).days
-                logger.debug(f"Calculated days remaining: {days_remaining} days from {cert_info['not_after']}")
-            except ValueError:
-                logger.error(f"Error parsing date string: {cert_info['not_after']}")
-                days_remaining = 0
-        logger.debug(f"Final days remaining: {days_remaining} days")
-        logger.debug(f"type of this {type(days_remaining)}")
-        logger.debug(f"type of this {type(cert_info['days_remaining'])}")
-        logger.debug(f"type of this {days_remaining - 30}")
-        if days_remaining < 30:
-            recommendations.append({
-                'title': 'Certificate Expiring Soon',
-                'description': f'The certificate will expire in {days_remaining} days. Renew it immediately.',
-                'severity': 'high'
-            })
-        elif days_remaining < 90:
-            recommendations.append({
-                'title': 'Certificate Expiring Soon',
-                'description': f'The certificate will expire in {days_remaining} days. Plan to renew it soon.',
-                'severity': 'medium'
-            })
+        # Check OCSP status
+        self._check_ocsp_status(ocsp_status, recommendations)
         
-        # Check key size
-        key_size = cert_info.get('key_size', 0)
-        key_type = cert_info.get('key_type', '')
+        # Check certificate validity period
+        self._check_validity_period(cert_info, recommendations)
         
-        if key_type == 'RSA' and key_size < 2048:
-            recommendations.append({
-                'title': 'Weak RSA Key Size',
-                'description': f'RSA key size of {key_size} bits is below the recommended minimum of 2048 bits.',
-                'severity': 'high'
-            })
-        elif key_type == 'ECDSA' and key_size < 256:
-            recommendations.append({
-                'title': 'Weak ECDSA Key Size',
-                'description': f'ECDSA key size of {key_size} bits is below the recommended minimum of 256 bits.',
-                'severity': 'high'
-            })
+        # Check key strength
+        self._check_key_strength(cert_info, recommendations)
         
-        # Check TLS version
-        if protocol_version and protocol_version < 'TLSv1.2':
-            recommendations.append({
-                'title': 'Outdated TLS Version',
-                'description': f'TLS version {protocol_version} is outdated. Upgrade to TLS 1.2 or higher.',
-                'severity': 'high'
-            })
+        # Check signature algorithm
+        self._check_signature_algorithm(cert_info, recommendations)
         
-        # Check for validation failures
-        for test_name, result in validation_results.items():
-            if not result.get('valid', False):
-                recommendations.append({
-                    'title': f'Failed {test_name} Validation',
-                    'description': result.get('message', 'Validation failed'),
-                    'severity': 'high'
-                })
+        # Check TLS protocol versions
+        self._check_protocol_versions(server_info, recommendations)
         
-        # Check cipher strength
-        if cipher:
-            cipher_name = cipher[0]
-            if 'RC4' in cipher_name or 'DES' in cipher_name or '3DES' in cipher_name:
-                recommendations.append({
-                    'title': 'Weak Cipher Suite',
-                    'description': f'Cipher suite {cipher_name} is considered weak. Use stronger ciphers.',
-                    'severity': 'high'
-                })
-        
+        # Check cipher suites
+        self._check_cipher_suites(server_info, recommendations)
+
         return recommendations
+
+    def _check_ocsp_status(self, ocsp_status: Dict, recommendations: List[Dict]):
+        """Check OCSP status and generate recommendations."""
+        if not ocsp_status.get('available'):
+            recommendations.append({
+                'severity': 'MEDIUM',
+                'category': 'OCSP',
+                'description': 'OCSP status checking is not available. Consider enabling OCSP stapling.'
+            })
+        elif not ocsp_status.get('valid'):
+            recommendations.append({
+                'severity': 'HIGH',
+                'category': 'OCSP',
+                'description': 'Certificate has been revoked or is invalid according to OCSP.'
+            })
+
+    def _check_validity_period(self, cert_info: Dict, recommendations: List[Dict]):
+        """Check certificate validity period and generate recommendations."""
+        try:
+            not_after = cert_info.get('not_after')
+            if not not_after or not_after == 'Unknown':
+                recommendations.append({
+                    'severity': 'MEDIUM',
+                    'category': 'Validity',
+                    'description': 'Could not determine certificate expiration date.'
+                })
+                return
+
+            # Parse the date string (format: YYYY-MM-DD)
+            not_after_date = datetime.strptime(not_after, '%Y-%m-%d')
+            days_until_expiry = (not_after_date - datetime.now()).days
+            
+            if days_until_expiry < 0:
+                recommendations.append({
+                    'severity': 'CRITICAL',
+                    'category': 'Validity',
+                    'description': 'Certificate has expired.'
+                })
+            elif days_until_expiry < 30:
+                recommendations.append({
+                    'severity': 'HIGH',
+                    'category': 'Validity',
+                    'description': f'Certificate will expire in {days_until_expiry} days.'
+                })
+            elif days_until_expiry < 90:
+                recommendations.append({
+                    'severity': 'MEDIUM',
+                    'category': 'Validity',
+                    'description': f'Certificate will expire in {days_until_expiry} days.'
+                })
+        except ValueError as e:
+            logger.error(f"Error parsing validity period: {str(e)}")
+            recommendations.append({
+                'severity': 'MEDIUM',
+                'category': 'Validity',
+                'description': 'Could not parse certificate expiration date.'
+            })
+        except Exception as e:
+            logger.error(f"Error checking validity period: {str(e)}")
+            recommendations.append({
+                'severity': 'MEDIUM',
+                'category': 'Validity',
+                'description': 'Error checking certificate validity period.'
+            })
+
+    def _check_key_strength(self, cert_info: Dict, recommendations: List[Dict]):
+        """Check public key strength and generate recommendations."""
+        try:
+            public_key = cert_info.get('public_key', {})
+            key_type = public_key.get('type')
+            key_size = public_key.get('key_size')
+            
+            if key_type in self.min_key_size:
+                if key_size < self.min_key_size[key_type]:
+                    recommendations.append({
+                        'severity': 'HIGH',
+                        'category': 'Key Strength',
+                        'description': f'Key size ({key_size} bits) is below recommended minimum of {self.min_key_size[key_type]} bits for {key_type}.'
+                    })
+        except Exception as e:
+            logger.error(f"Error checking key strength: {str(e)}")
+
+    def _check_signature_algorithm(self, cert_info: Dict, recommendations: List[Dict]):
+        """Check signature algorithm and generate recommendations."""
+        sig_alg = cert_info.get('signature_algorithm', '')
+        if sig_alg and sig_alg not in self.recommended_signature_algorithms:
+            recommendations.append({
+                'severity': 'MEDIUM',
+                'category': 'Signature Algorithm',
+                'description': f'Signature algorithm {sig_alg} is not among recommended algorithms.'
+            })
+
+    def _check_protocol_versions(self, server_info: Dict, recommendations: List[Dict]):
+        """Check TLS protocol versions and generate recommendations."""
+        protocols = server_info.get('protocols', [])
+        
+        # Check for outdated protocols
+        outdated = [p for p in protocols if p not in self.recommended_protocols]
+        if outdated:
+            recommendations.append({
+                'severity': 'HIGH',
+                'category': 'Protocol Versions',
+                'description': f'Outdated TLS protocols in use: {", ".join(outdated)}. Consider disabling them.'
+            })
+            
+        # Check for missing modern protocols
+        missing = [p for p in self.recommended_protocols if p not in protocols]
+        if missing:
+            recommendations.append({
+                'severity': 'MEDIUM',
+                'category': 'Protocol Versions',
+                'description': f'Modern TLS protocols not enabled: {", ".join(missing)}. Consider enabling them.'
+            })
+
+    def _check_cipher_suites(self, server_info: Dict, recommendations: List[Dict]):
+        """Check cipher suites and generate recommendations."""
+        ciphers = server_info.get('cipher_suites', [])
+        weak_ciphers = [c for c in ciphers if 'NULL' in c or 'anon' in c or 'RC4' in c or 'DES' in c]
+        
+        if weak_ciphers:
+            recommendations.append({
+                'severity': 'HIGH',
+                'category': 'Cipher Suites',
+                'description': f'Weak cipher suites detected: {", ".join(weak_ciphers)}. Consider disabling them.'
+            })
 
 
