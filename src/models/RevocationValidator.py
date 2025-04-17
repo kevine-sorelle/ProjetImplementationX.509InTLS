@@ -2,7 +2,6 @@
 from cryptography import x509
 from cryptography.x509 import ExtensionNotFound
 from cryptography.hazmat.backends import default_backend
-import requests
 import base64
 from utils.logger_config import setup_logger
 from models.certificat import Certificat
