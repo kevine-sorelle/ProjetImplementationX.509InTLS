@@ -36,18 +36,30 @@
                                    value="365" min="1" max="3650" required>
                         </div>
                         <div class="mb-3">
+                            <label for="key_type" class="form-label">Type de Clé</label>
+                            <select class="form-select" id="key_type" name="key_type" required onchange="updateKeySizeOptions()">
+                                <option value="EC">EC (Elliptic Curve)</option>
+                                <option value="RSA">RSA</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label for="key_size" class="form-label">Taille de la Clé</label>
                             <select class="form-select" id="key_size" name="key_size" required onchange="showKeySizeWarning(this.value)">
-                                <option value="512">512 bits (INSÉCURISÉ - Pour tests uniquement)</option>
-                                <option value="1024">1024 bits (INSÉCURISÉ - Pour tests uniquement)</option>
-                                <option value="2048">2048 bits (Minimum recommandé)</option>
-                                <option value="4096">4096 bits (Sécurisé)</option>
+                                <!-- Options will be populated by JavaScript -->
                             </select>
                             <div id="keySizeWarning" class="alert alert-warning mt-2" style="display: none;">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 Attention: La taille de clé sélectionnée est considérée comme insécurisée. 
                                 Cette option est uniquement destinée aux tests de validation.
                             </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="hash_algorithm" class="form-label">Algorithme de Hachage</label>
+                            <select class="form-select" id="hash_algorithm" name="hash_algorithm" required>
+                                <option value="SHA256">SHA-256</option>
+                                <option value="SHA384">SHA-384</option>
+                                <option value="SHA512">SHA-512</option>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Options KEM</label>
@@ -120,13 +132,68 @@
 
 {% block extra_js %}
 <script>
+function updateKeySizeOptions() {
+    const keyType = document.getElementById('key_type').value;
+    const keySizeSelect = document.getElementById('key_size');
+    keySizeSelect.innerHTML = ''; // Clear existing options
+    
+    if (keyType === 'RSA') {
+        const rsaSizes = [
+            { value: 1024, label: '1024 bits (INSÉCURISÉ - Pour tests uniquement)' },
+            { value: 2048, label: '2048 bits (Minimum recommandé)' },
+            { value: 3072, label: '3072 bits (Recommandé)' },
+            { value: 4096, label: '4096 bits (Sécurisé)' }
+        ];
+        rsaSizes.forEach(size => {
+            const option = new Option(size.label, size.value);
+            keySizeSelect.add(option);
+        });
+    } else { // EC
+        const ecSizes = [
+            { value: 256, label: '256 bits (NIST P-256)' },
+            { value: 384, label: '384 bits (NIST P-384)' },
+            { value: 521, label: '521 bits (NIST P-521)' }
+        ];
+        ecSizes.forEach(size => {
+            const option = new Option(size.label, size.value);
+            keySizeSelect.add(option);
+        });
+    }
+
+    console.log("Key type selected:", keyType);
+    console.log("Options populated:", keySizeSelect.options.length);
+
+    if (keySizeSelect.options.length > 0) {
+        keySizeSelect.selectedIndex = 0;
+    }
+    
+    // Trigger warning check for initial selection
+    showKeySizeWarning(keySizeSelect.value);
+}
+
 function showKeySizeWarning(value) {
     const warningDiv = document.getElementById('keySizeWarning');
-    if (value < 2048) {
+    const keyType = document.getElementById('key_type').value;
+    
+    if ((keyType === 'RSA' && value < 2048) || (keyType === 'EC' && value < 256)) {
         warningDiv.style.display = 'block';
     } else {
         warningDiv.style.display = 'none';
     }
 }
+
+// Initialize key size options when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Set initial key type and update options
+    document.getElementById('key_type').dispatchEvent(new Event('change'));
+
+    const keyTypeSelect = document.getElementById('key_type');
+    keyTypeSelect.addEventListener('change', function() {
+        updateKeySizeOptions();
+    });
+    
+    // Initial update
+    updateKeySizeOptions();
+});
 </script>
 {% endblock %}

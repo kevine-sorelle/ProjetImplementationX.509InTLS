@@ -1,5 +1,6 @@
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa, ec, dsa
 from typing import Union, Tuple
 import sys
 sys.path.append("src")
@@ -37,11 +38,24 @@ class KeyValidator(DecoratorValidator):
             MIN_EC_KEY_SIZE = 256
             MIN_DSA_KEY_SIZE = 1024
             
-            # Perform validation
-            if key_length >= MIN_RSA_KEY_SIZE or key_length >= MIN_EC_KEY_SIZE or key_length >= MIN_DSA_KEY_SIZE:
-                return True, f"Key size is valid ({key_length} bits)"
+            # Check key type and apply appropriate minimum size
+            if isinstance(public_key, rsa.RSAPublicKey):
+                if key_length >= MIN_RSA_KEY_SIZE:
+                    return True, f"RSA key size is valid ({key_length} bits)"
+                else:
+                    return False, f"RSA key size is invalid ({key_length} bits, minimum required: {MIN_RSA_KEY_SIZE})"
+            elif isinstance(public_key, ec.EllipticCurvePublicKey):
+                if key_length >= MIN_EC_KEY_SIZE:
+                    return True, f"EC key size is valid ({key_length} bits)"
+                else:
+                    return False, f"EC key size is invalid ({key_length} bits, minimum required: {MIN_EC_KEY_SIZE})"
+            elif isinstance(public_key, dsa.DSAPublicKey):
+                if key_length >= MIN_DSA_KEY_SIZE:
+                    return True, f"DSA key size is valid ({key_length} bits)"
+                else:
+                    return False, f"DSA key size is invalid ({key_length} bits, minimum required: {MIN_DSA_KEY_SIZE})"
             else:
-                return False, f"Key size is invalid ({key_length} bits, minimum required: RSA={MIN_RSA_KEY_SIZE}, EC={MIN_EC_KEY_SIZE}, DSA={MIN_DSA_KEY_SIZE})"
+                return False, f"Unsupported key type: {type(public_key)}"
                 
         except Exception as e:
             logger.error(f"Key validation error: {str(e)}")

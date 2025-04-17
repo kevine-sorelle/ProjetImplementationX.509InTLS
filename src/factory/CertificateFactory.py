@@ -15,6 +15,27 @@ from strategy.KeyGenerationStrategy import KeyGenerationStrategy
 class CertificateFactory:
     """Factory class for creating certificates with different configurations"""
     
+    SUPPORTED_KEY_TYPES = {
+        "RSA": {
+            "sizes": [1024, 2048, 3072, 4096],
+            "strategy": RSAKeyStrategy(),
+            "hash_algorithms": {
+                "SHA256": hashes.SHA256(),
+                "SHA384": hashes.SHA384(),
+                "SHA512": hashes.SHA512()
+            }
+        },
+        "EC": {
+            "sizes": [256, 384, 521],
+            "strategy": ECKeyStrategy(),
+            "hash_algorithms": {
+                "SHA256": hashes.SHA256(),
+                "SHA384": hashes.SHA384(),
+                "SHA512": hashes.SHA512()
+            }
+        }
+    }
+    
     @staticmethod
     def create_certificate(
         subject: str,
@@ -23,6 +44,7 @@ class CertificateFactory:
         validity_days: int = 365,
         key_type: str = "EC",
         key_size: int = 256,
+        hash_algorithm: str = "SHA256",
         include_kem: bool = False
     ):
         """
@@ -35,16 +57,31 @@ class CertificateFactory:
             validity_days (int): Number of days the certificate is valid
             key_type (str): Type of key to generate ("RSA" or "EC")
             key_size (int): Size of the key in bits
+            hash_algorithm (str): Hash algorithm to use for signing ("SHA256", "SHA384", "SHA512")
             include_kem (bool): Whether to include KEM keys in the certificate
             
         Returns:
             dict: Dictionary containing certificate and key information
         """
-        # Select key generation strategy
-        strategy = {
-            "RSA": RSAKeyStrategy(),
-            "EC": ECKeyStrategy()
-        }.get(key_type.upper(), ECKeyStrategy())
+        key_type = key_type.upper()
+        hash_algorithm = hash_algorithm.upper()
+        
+        # Validate key type
+        if key_type not in CertificateFactory.SUPPORTED_KEY_TYPES:
+            raise ValueError(f"Unsupported key type. Must be one of: {list(CertificateFactory.SUPPORTED_KEY_TYPES.keys())}")
+        
+        # Validate key size
+        supported_sizes = CertificateFactory.SUPPORTED_KEY_TYPES[key_type]["sizes"]
+        if key_size not in supported_sizes:
+            raise ValueError(f"Unsupported key size for {key_type}. Must be one of: {supported_sizes}")
+        
+        # Validate hash algorithm
+        supported_hashes = CertificateFactory.SUPPORTED_KEY_TYPES[key_type]["hash_algorithms"]
+        if hash_algorithm not in supported_hashes:
+            raise ValueError(f"Unsupported hash algorithm. Must be one of: {list(supported_hashes.keys())}")
+        
+        # Get key generation strategy
+        strategy = CertificateFactory.SUPPORTED_KEY_TYPES[key_type]["strategy"]
         
         # Generate key pair
         private_key = strategy.generate_key(key_size)
@@ -86,10 +123,10 @@ class CertificateFactory:
                 critical=False
             )
         
-        # Sign the certificate
+        # Sign the certificate with selected hash algorithm
         certificate = builder.sign(
             private_key=private_key,
-            algorithm=hashes.SHA256()
+            algorithm=CertificateFactory.SUPPORTED_KEY_TYPES[key_type]["hash_algorithms"][hash_algorithm]
         )
         
         # Convert to PEM format
@@ -103,6 +140,9 @@ class CertificateFactory:
         return {
             'certificate': cert_pem,
             'private_key': private_key_pem,
+            'key_type': key_type,
+            'key_size': key_size,
+            'hash_algorithm': hash_algorithm,
             'kem_public_key': kem_public_key.hex() if kem_public_key else None,
             'kem_private_key': kem_private_key.hex() if kem_private_key else None
         }
