@@ -6,7 +6,7 @@ import sys
 sys.path.append("src")
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from strategy.SignatureStrategyFactory import SignatureStrategyFactory
 from utils.logger_config import setup_logger
 from utils.certificate_parser import CertificateParser
@@ -104,7 +104,7 @@ class CertificateChainService:
             pem_chain += pem_cert + "\n"
         return pem_chain
 
-    def validate_chain(self, cert_chain: List[x509.Certificate]) -> bool:
+    def validate_chain(self, cert_chain: List[x509.Certificate]) -> List[Dict]:
         """
         Validate the certificate chain.
         
@@ -114,33 +114,59 @@ class CertificateChainService:
         Returns:
             bool: True if the chain is valid, False otherwise
         """
-        if not cert_chain or len(cert_chain) < 2:
-            logger.warning("Certificate chain is too short or empty")
+        validation_results = []
+        if not cert_chain:
+            logger.warning("Certificate chain is empty")
             return False
 
         try:
-            # Check each certificate is signed by its issuer
+            # For self-signed certificates
+            if len(cert_chain) == 1:
+                cert = cert_chain[0]
+                # Verify self-signed certificate
+                signatureStrategy = SignatureStrategyFactory.get_signature_strategy(cert, cert)
+                valid, error = signatureStrategy.validate_signature(cert, cert)
+                logger.info(f"Self-signed certificate verification: {valid} {error}")
+                if not valid:
+                    logger.error(f"Self-signed certificate verification failed: {error}")
+                    valid, error = False, f"Self-signed certificate verification failed"
+                validation_results.append({
+                    "subject": str(cert.subject),
+                    "issuer": str(cert.issuer),
+                    "valid": valid,
+                    "error": None if valid else error
+                })
+                return validation_results
+
+            # For multi-certificate chains
             for i in range(len(cert_chain) - 1):
                 cert = cert_chain[i]
                 issuer = cert_chain[i + 1]
-                # Verify the certificate was signed by the issuer
-                logger.info("cert subject: %s", cert.subject)
-                logger.info("issuer subject: %s", issuer.subject)
-                
-                
-                public_key = issuer.public_key()
+                logger.info(f"Verifying: {cert.subject} <- {issuer.subject}")
                 try:
                     signatureStrategy = SignatureStrategyFactory.get_signature_strategy(cert, issuer)
-                    result, error = signatureStrategy.validate_signature(cert, issuer)
-                    if not result:
-                        logger.error(f"Certificate verification failed: {error}")
-                        return False
+                    valid, error = signatureStrategy.validate_signature(cert, issuer)
+                    logger.info(f"Certificate verification: {valid} {error}")
                 except Exception as e:
-                    logger.error(f"Certificate verification failed: {str(e)}")
-                    return False
-
-            return True
+                    valid, error = False, f"Error validating certificate chain: {str(e)}"
+                if not valid:
+                    logger.error(f"Certificate verification failed: {error}")
+                    valid, error = False,  f"Error validating certificate chain"
+                validation_results.append({
+                    "subject": str(cert.subject),
+                    "issuer": str(issuer.subject),
+                    "valid": valid,
+                    "error": None if valid else error
+                })
+            return validation_results
 
         except Exception as e:
             logger.error(f"Error validating certificate chain: {str(e)}")
-            return False
+            return [
+                {
+                    "subject": "Unknown",
+                    "issuer": "Unknown",
+                    "valid": False,
+                    "error": f"Error validating certificate chain: {str(e)}"
+                }
+            ]

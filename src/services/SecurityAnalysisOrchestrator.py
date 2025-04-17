@@ -34,12 +34,16 @@ class SecurityAnalysisOrchestrator:
             
             # Get and validate certificate chain
             cert_chain, pem_chain, ssl_socket = self.cert_chain_service.get_certificate_chain(hostname, port)
-            chain_valid = self.cert_chain_service.validate_chain(cert_chain)
+            chain_results = self.cert_chain_service.validate_chain(cert_chain)
             
             # Count certificates
             total_certs = len(cert_chain)
-            valid_certs = sum(1 for cert in cert_chain if self.cert_chain_service.validate_chain([cert]))
+            logger.info(f"Total certificates: {total_certs}")
+            valid_certs = sum(1 for result in chain_results if result['valid'])
+            logger.info(f"Valid certificates: {valid_certs}")
             invalid_certs = total_certs - valid_certs
+            logger.info(f"Invalid certificates: {invalid_certs}")
+            chain_valid = invalid_certs == 0
             
             # Add certificate chain information to server_info
             server_info.update({
