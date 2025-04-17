@@ -2,7 +2,7 @@ import socket
 import ssl
 import sys
 sys.path.append("src")
-from config import SOCKET_SERVER_HOST, SOCKET_SERVER_PORT
+from config.config import SOCKET_SERVER_HOST, SOCKET_SERVER_PORT
 
 
 class Server:

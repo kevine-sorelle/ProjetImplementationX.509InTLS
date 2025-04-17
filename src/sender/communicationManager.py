@@ -1,7 +1,7 @@
 import sys
 sys.path.append("src")
 from server import Server
-from config import CERT_FILE, KEY_FILE
+from config.config import CERT_FILE, KEY_FILE
 from sender.certificateGenerator import CertificateGenerator
 from sender.client import Client
 

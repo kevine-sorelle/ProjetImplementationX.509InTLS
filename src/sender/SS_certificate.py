@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 import sys
 sys.path.append("src")
-from config import PUBLIC_EXPONENT, KEY_SIZE
+from config.config import PUBLIC_EXPONENT, KEY_SIZE
 
 """Classe qui implémente les certificats Auto-signés"""
 class SelfSignedcertificate:
