@@ -180,57 +180,66 @@ def server_security():
 
 @app.route("/generator", methods=["GET", "POST"])
 def generator():
-    """Page de génération de certificat"""
-    if request.method == "POST":
+    if request.method == 'POST':
         try:
-            # Get form data
+            # Get form data with correct field names
             subject = request.form.get('subject')
             organization = request.form.get('organization')
             country = request.form.get('country')
             validity_days = int(request.form.get('validity_days', 365))
-            key_size = int(request.form.get('key_size', 256))  # Default to 256 for EC keys
+            key_type = request.form.get('key_type', 'EC')
+            key_size = int(request.form.get('key_size', 256))
+            hash_algorithm = request.form.get('hash_algorithm', 'SHA256')
             include_kem = request.form.get('include_kem') == 'on'
 
-            # Generate certificate using the CertificateGenerator
-            cert_generator = CertificateFactory()
-            cert_data = cert_generator.create_certificate(
+            # Validate required fields
+            if not all([subject, organization, country]):
+                flash("Tous les champs obligatoires doivent être remplis", "error")
+                return render_template('pages/generator.html')
+
+            # Create certificate factory
+            factory = CertificateFactory()
+            
+            # Generate certificate with selected parameters
+            cert = factory.create_certificate(
                 subject=subject,
                 organization=organization,
                 country=country,
                 validity_days=validity_days,
+                key_type=key_type,
                 key_size=key_size,
+                hash_algorithm=hash_algorithm,
                 include_kem=include_kem
             )
-            
-            # Store the generated certificate in the session
-            session["generated_certificate"] = cert_data['certificate']
-            session["generated_private_key"] = cert_data['private_key']
-            session["generated_kem_public_key"] = cert_data['kem_public_key']
-            session["generated_kem_private_key"] = cert_data['kem_private_key']
-            session["generated_cert_info"] = {
-                "subject": subject,
-                "organization": organization,
-                "country": country,
-                "validity_days": validity_days,
-                "key_size": key_size,
-                "include_kem": include_kem
+
+            # Store certificate and info in session for display and download
+            session['generated_certificate'] = cert['certificate']
+            session['generated_cert_info'] = {
+                'subject': subject,
+                'organization': organization,
+                'country': country,
+                'validity_days': validity_days,
+                'key_type': key_type,
+                'key_size': key_size,
+                'hash_algorithm': hash_algorithm,
+                'include_kem': include_kem
             }
 
+            flash('Certificat généré avec succès!', 'success')
             return render_template('pages/generator.html',
-                                cert_pem=cert_data['certificate'],
-                                private_key=cert_data['private_key'],
-                                kem_public_key=cert_data['kem_public_key'],
-                                kem_private_key=cert_data['kem_private_key'],
+                                cert_pem=session['generated_certificate'],
                                 subject=subject,
                                 organization=organization,
                                 country=country,
                                 validity_days=validity_days,
                                 key_size=key_size,
                                 include_kem=include_kem)
+
+        except ValueError as e:
+            flash(f"Erreur de validation: {str(e)}", "error")
         except Exception as e:
-            logger.error(f"Error in certificate generation: {str(e)}", exc_info=True)
-            flash(str(e), "error")
-            return render_template('pages/generator.html')
+            flash(f"Erreur lors de la génération du certificat: {str(e)}", "error")
+            logger.error(f"Error generating certificate: {str(e)}", exc_info=True)
 
     return render_template('pages/generator.html')
 
