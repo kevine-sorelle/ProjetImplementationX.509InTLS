@@ -1,0 +1,239 @@
+{% extends "partials/base.html" %}
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Server Security Dashboard</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message|safe }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if not server_info %}
+        {% if error %}
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">Error</h4>
+                <p>{{ error }}</p>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <h4 class="alert-heading">No Data Available</h4>
+                <p>Please enter a server to analyze or validate a certificate first.</p>
+            </div>
+        {% endif %}
+    {% else %}
+    <!-- Server Overview Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Server Overview</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Server Information</h6>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Hostname
+                            <span class="badge bg-primary rounded-pill">{{ server_info.hostname|default('N/A') }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Port
+                            <span class="badge bg-primary rounded-pill">{{ server_info.port }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            IP Address
+                            <span class="badge bg-primary rounded-pill">{{ server_info.ip_address }}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Certificate Chain</h6>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Certificates
+                            <span class="badge bg-primary rounded-pill">{{ server_info.total_certificates }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Valid Certificates
+                            <span class="badge bg-success rounded-pill">{{ server_info.valid_certificates }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Invalid Certificates
+                            <span class="badge bg-danger rounded-pill">{{ server_info.invalid_certificates }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Certificate Details Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Certificate Details</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Subject Information</h6>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Common Name (CN)
+                            <span class="badge bg-info rounded-pill">{{ server_info.subject_cn }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Organization (O)
+                            <span class="badge bg-info rounded-pill">{{ server_info.subject_o }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Country (C)
+                            <span class="badge bg-info rounded-pill">{{ server_info.subject_c }}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Validity Period</h6>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Not Before
+                            <span class="badge bg-info rounded-pill">{{ server_info.not_before }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Not After
+                            <span class="badge bg-info rounded-pill">{{ server_info.not_after }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Days Remaining
+                            <span class="badge {% if server_info.days_remaining < 30 %}bg-danger{% elif server_info.days_remaining < 90 %}bg-warning{% else %}bg-success{% endif %} rounded-pill">
+                                {{ server_info.days_remaining }} days
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Parameters Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">Security Parameters</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Key Information</h6>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Key Type
+                            <span class="badge bg-warning text-dark rounded-pill">{{ server_info.key_type }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Key Size
+                            <span class="badge {% if server_info.key_size < 2048 %}bg-danger{% elif server_info.key_size < 3072 %}bg-warning{% else %}bg-success{% endif %} rounded-pill">
+                                {{ server_info.key_size }} bits
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Signature Algorithm
+                            <span class="badge bg-warning text-dark rounded-pill">{{ server_info.signature_algorithm }}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Protocol Support</h6>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            TLS Version
+                            <span class="badge {% if server_info.tls_version < 'TLSv1.2' %}bg-danger{% else %}bg-success{% endif %} rounded-pill">
+                                {{ server_info.tls_version }}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Cipher Suites
+                            {% if server_info.cipher_suites %}
+                                <span class="badge bg-warning text-dark rounded-pill">
+                                    {{ server_info.cipher_suites|join(', ')|default('None') }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark rounded-pill">None</span>
+                            {% endif %}
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            OCSP Stapling
+                            <span class="badge {% if server_info.ocsp_stapling %}bg-success{% else %}bg-warning{% endif %} rounded-pill">
+                                {{ 'Supported' if server_info.ocsp_stapling else 'Not Supported' }}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Validation Results Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">Validation Results</h5>
+        </div>
+        <div class="card-body">
+            {% for test_name, result in validation_results.items() %}
+            <div class="alert {% if result.valid %}alert-success{% else %}alert-danger{% endif %} mb-2">
+                <h5 class="alert-heading">{{ test_name|title }} Test</h5>
+                <p class="mb-0">{{ result.message }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Security Recommendations Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Security Recommendations</h5>
+        </div>
+        <div class="card-body">
+            {% if security_recommendations %}
+                <ul class="list-group">
+                    {% for recommendation in security_recommendations %}
+                    <li class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ recommendation.title }}</h6>
+                            <small class="text-{% if recommendation.severity == 'high' %}danger{% elif recommendation.severity == 'medium' %}warning{% else %}info{% endif %}">
+                                {{ recommendation.severity|title }} Priority
+                            </small>
+                        </div>
+                        <p class="mb-1">{{ recommendation.description }}</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="alert alert-info">No security recommendations available.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('server_security') }}" class="btn btn-primary">Analyze Another Server</a>
+        <button onclick="location.reload()" class="btn btn-secondary">Refresh Results</button>
+    </div>
+    {% endif %}
+
+    <!-- Add at the top of the form -->
+    <div id="loading" style="display: none;">
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add JavaScript for form submission -->
+    <script>
+    document.querySelector('form').addEventListener('submit', function() {
+        document.getElementById('loading').style.display = 'block';
+    });
+    </script>
+</div>
+{% endblock %} 

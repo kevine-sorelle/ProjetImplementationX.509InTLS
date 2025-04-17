@@ -19,7 +19,7 @@ def test_get_certificate(setup):
     cert_retriever = GetCertificate(connection, fetcher)
 
     # Act
-    result = cert_retriever.getCertificate()
+    result = cert_retriever.get_certificate(connection.hostname, connection.port)
 
 
     # Assert

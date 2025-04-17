@@ -1,0 +1,22 @@
+{% extends "partials/base.html" %} {% block content %}
+<h1 class="mb-4">Security Tests</h1>
+<div class="container mt-4">
+  <!-- Vue d'ensemble -->
+  <div class="row mb-4">
+    {% if test_results %}
+    <div class="mt-4">
+        {% for key, result in test_results.items() %}
+            <div class="alert alert-{{'success' if result == True else 'danger' }}" role="alert">
+                <strong>{{ key.capitalize() }}</strong>: {{ result }}
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            Aucun resultats de test disponible. Veuillez tout recuperer un certificat!
+        </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+<h1 class="mb-4">Interoperability Tests</h1>
+{% endblock %}

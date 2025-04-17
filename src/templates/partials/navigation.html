@@ -1,0 +1,66 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container">
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+      aria-controls="navbarNav"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a
+            class="nav-link {% if request.endpoint == 'index' %}active{% endif %}"
+            href="{{ url_for('index') }}"
+            >Certificate Validator</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link {% if request.endpoint == 'server_security' %}active{% endif %}"
+            href="{{ url_for('server_security') }}"
+            >Server Security Dashboard</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link {% if request.endpoint == 'generator' %}active{% endif %}"
+            href="{{ url_for('generator') }}"
+            >Certificate Generator</a
+          >
+        </li>
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            id="downloadDropdown"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            Certificate Downloader
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="downloadDropdown">
+            <li>
+              <a class="dropdown-item {% if request.endpoint == 'download' %}active{% endif %}" 
+                 href="{{ url_for('download') }}">
+                Download Validated Certificate
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item {% if request.endpoint == 'download_generated' %}active{% endif %}" 
+                 href="{{ url_for('download_generated') }}">
+                Download Generated Certificate
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

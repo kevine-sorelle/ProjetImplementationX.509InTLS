@@ -1,0 +1,41 @@
+@startuml classes_UML-factory-validator
+set namespaceSeparator none
+class "DateValidator" as src.models.DateValidator {
+  getValidityPeriod(cert: x509.Certificate) -> dict
+  validate(cert: x509.Certificate)
+}
+class "ExtensionValidator" as src.models.ExtensionValidator {
+  validate(certificate: Union[Certificat, str, x509.Certificate]) -> Tuple[bool, str]
+}
+class "IssuerValidator" as src.models.IssuerValidator {
+  getIssuer(cert: x509.Certificate) -> str
+  validate(cert: x509.Certificate)
+}
+class "KeyValidator" as src.models.KeyValidator {
+  validate(cert: x509.Certificate)
+}
+class "RevocationValidator" as src.models.RevocationValidator {
+  validate(certificate: Union[Certificat, str, x509.Certificate]) -> Tuple[bool, str]
+}
+class "SignatureValidator" as src.models.SignatureValidator {
+  get_public_key(certificate: x509.Certificate)
+  get_signature(certificate: x509.Certificate)
+  validate(certificate: Union[Certificat, str, x509.Certificate], issuer_cert: Optional[Certificat]) -> tuple[bool, str]
+  validate_trusted_issuer(certificate: x509.Certificate, trusted_issuers: list)
+  verify_certificate_signature(cert: x509.Certificate, issuer_cert)
+}
+class "ValidatorFactory" as src.models.ValidatorFactory {
+  create_validator(validator_type: str) -> ValidatorInterface
+  get_available_validators() -> list[str]
+}
+
+'factory pattern core relationships'
+app.py ..> src.models.ValidatorFactory : uses
+src.models.ValidatorFactory ..> src.models.DateValidator : creates
+src.models.ValidatorFactory ..> src.models.IssuerValidator : creates
+src.models.ValidatorFactory ..> src.models.KeyValidator : creates
+src.models.ValidatorFactory ..> src.models.SignatureValidator : creates
+src.models.ValidatorFactory ..> src.models.RevocationValidator : creates
+src.models.ValidatorFactory ..> src.models.AlgorithmValidator : creates
+src.models.ValidatorFactory ..> src.models.ExtensionValidator : creates
+@enduml

@@ -3,3 +3,4 @@ Werkzeug==2.2.2
 pytest==8.3.4
 pytest-cov==6.0.0
 pytest-benchmark==5.1.0
+requests==2.31.0

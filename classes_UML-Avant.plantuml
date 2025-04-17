@@ -1,0 +1,35 @@
+@startuml classes_UML-Avant
+set namespaceSeparator none
+class "AnalyseCertificate" as src.models.analyseCertificate.AnalyseCertificate {
+  metadata
+  parser
+  validator
+  analyseCertificate(cert_pem: str) -> dict
+}
+class "CertificateMetadata" as src.models.certificateMetadata.CertificateMetadata {
+  getIssuer(cert: str) -> str
+  getValidityPeriod(cert: x509.Certificate) -> dict
+  validateIssuer(cert: str, expected_parts: dict) -> bool
+}
+class "DateValidator" as src.models.DateValidator.DateValidator {
+  checkCertificateValidity(cert: x509.Certificate) -> bool
+}
+class "GetCertificate" as src.models.getCertificate.GetCertificate {
+  connection
+  fetcher
+  getCertificate()
+}
+class "ICertificateMetadata" as src.models.ICertificateMetadata.ICertificateMetadata {
+  {abstract}getIssuer(cert: x509.Certificate) -> str
+  {abstract}getValidityPeriod(cert: x509.Certificate) -> dict
+}
+class "ICertificateParser" as src.models.ICertificateParser.ICertificateParser {
+  {abstract}parse(cert_pem: str) -> x509.Certificate
+}
+class "ICertificateValidator" as src.models.certificateValidator.ICertificateValidator {
+  {abstract}checkCertificateValidity(cert: x509.Certificate) -> bool
+}
+class "OpenSSLParser" as src.models.OpenSSLParser.OpenSSLParser {
+  parse(cert_pem: str) -> x509.Certificate
+}
+@enduml

@@ -1,0 +1,72 @@
+@startuml classes_UML-Après
+set namespaceSeparator none
+class "app" as src.app {
+}
+class "AnalyseCertificate" as src.models.analyseCertificate.AnalyseCertificate {
+  parser : OpenSSLParser
+  validator_d : Validator
+  validator_date : DateValidator
+  validator_i : Validator
+  validator_issuer : IssuerValidator
+  validator_simple : ValidatorDeBase
+  analyseCertificate(cert_pem: str) -> dict
+}
+class "DateValidator" as src.models.DateValidator.DateValidator {
+  getValidityPeriod(cert: x509.Certificate) -> dict
+  validate(cert: x509.Certificate)
+}
+class "IssuerValidator" as src.models.IssuerValidator.IssuerValidator {
+  getIssuer(cert: x509.Certificate) -> str
+  validate(cert: x509.Certificate)
+}
+class "KeyValidator" as src.models.KeyValidator.KeyValidator {
+  validate(cert: x509.Certificate)
+}
+class "OpenSSLParser" as src.models.OpenSSLParser.OpenSSLParser {
+  parse(cert_pem: str) -> x509.Certificate
+}
+class "SecurityTest" as src.services.SecurityTest.SecurityTest {
+  k_validator : Validator
+  key_validator : KeyValidator
+  parser : OpenSSLParser
+  s_validator : Validator
+  signature_validator : SignatureValidator
+  validator_base : ValidatorDeBase
+  securityTest(cert_pem: str) -> dict
+}
+class "SignatureValidator" as src.models.SignatureValidator.SignatureValidator {
+  get_public_key(certificate: x509.Certificate)
+  get_signature(certificate: x509.Certificate)
+  validate(certificate: x509.Certificate)
+  validate_trusted_issuer(certificate: x509.Certificate, trusted_issuer: list)
+  verify_certificate_signature(cert: x509.Certificate)
+}
+class "DecoratorValidator" as src.models.decoratorValidator.DecoratorValidador {
+  {abstract}validate(certificate)
+}
+class "Validator" as src.models.Validator.Validator {
+  validator : ValidatorInterface
+  validate(certificate)
+}
+class "ValidatorDeBase" as src.models.ValidatorDeBase.ValidatorDeBase {
+  validate(certificate)
+}
+class "ValidatorInterface" as src.models.validatorInterface.ValidatorInterface {
+  {abstract}validate(certificate: x509.Certificate)
+}
+src.models.DateValidator.DateValidator --|> src.models.decoratorValidator.DecoratorValidador: herite
+src.models.IssuerValidator.IssuerValidator --|> src.models.decoratorValidator.DecoratorValidador: herite
+src.models.KeyValidator.KeyValidator --|> src.models.decoratorValidator.DecoratorValidador: herite
+src.models.SignatureValidator.SignatureValidator --|> src.models.decoratorValidator.DecoratorValidador: herite
+src.models.validatorInterface.ValidatorInterface <|-- src.models.decoratorValidator.DecoratorValidador: implement
+src.models.decoratorValidator.DecoratorValidador <-- src.models.validatorInterface.ValidatorInterface: decore
+src.models.ValidatorDeBase.ValidatorDeBase --|> src.models.validatorInterface.ValidatorInterface: implement
+src.app --> src.models.analyseCertificate.AnalyseCertificate : Uses
+src.models.analyseCertificate.AnalyseCertificate -->  src.models.OpenSSLParser.OpenSSLParser: Uses
+src.models.analyseCertificate.AnalyseCertificate -->  src.models.Validator.Validator: Uses
+src.models.Validator.Validator --> src.models.validatorInterface.ValidatorInterface: Uses
+src.app --> src.services.SecurityTest.SecurityTest : Uses
+src.services.SecurityTest.SecurityTest -->  src.models.OpenSSLParser.OpenSSLParser: Uses
+src.services.SecurityTest.SecurityTest -->  src.models.Validator.Validator: Uses
+
+@enduml

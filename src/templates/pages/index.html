@@ -1,31 +1,119 @@
-{% extends "partials/base.html" %} {% block content %}
-<h1 class="mb-4">Collecte des informations serveur</h1>
+{% extends "partials/base.html" %} 
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Certificate Validator</h1>
 
-<form method="post" class="mb-4">
-    <div class="mb-3">
-        <label for="hostname" class="form-label">Nom ou Adresse du serveur</label>
-        <input type="text" step="0.1" class="form-control" id="hostname" name="hostname" placeholder="Enter domain (e.g. google.com)" required>
-    </div>
-    <div class="mb-3">
-        <label for="port" class="form-label">Numéro de port</label>
-        <input type="number" step="0.1" class="form-control" id="port" name="port" placeholder="Enter port number (e.g. 443)">
-    </div>
-    <button type="submit" class="btn btn-primary">Valider</button>
-</form>
+    <form method="post" class="mb-4" id="validatorForm" enctype="multipart/form-data">
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Validation Method</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="validation_type" id="hostname" value="hostname" checked>
+                        <label class="form-check-label" for="hostname">
+                            Validate by Hostname
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="validation_type" id="file" value="file">
+                        <label class="form-check-label" for="file">
+                            Validate by Certificate File
+                        </label>
+                    </div>
+                </div>
 
-{% if cert_info %}
-<div class="mt-4">
-    <h2>Resultat pour le serveur {{ cert_info.hostname }}</h2>
-    {% for key, message in cert_info.items() %}
-        {% if key == "hostname" %}
-            <div class="alert alert-info" role="alert">Hostname: {{ message }} </div>
-        {% elif key == "valid" %}
-            <div class="alert {{ "success" if message else "alert-danger" }}" role="alert">Valid : {{ "Yes" if message else "No" }}</div>
-        {% elif key == "issuer" %}
-            <div class="alert alert-primary" role="alert">Issuer: {{ message }}</div>
-        {% else %}
-            <div class="alert" role="alert">{{ key }}: {{ message }}</div>
+                <div id="hostnameFields">
+                    <div class="mb-3">
+                        <label for="hostname" class="form-label">Server Name or Address</label>
+                        <input type="text" class="form-control" id="hostname" name="hostname" 
+                               placeholder="Enter domain (e.g. google.com)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="port" class="form-label">Port Number</label>
+                        <input type="number" class="form-control" id="port" name="port" 
+                               placeholder="Enter port number (e.g. 443)" value="443">
+                    </div>
+                </div>
+
+                <div id="fileFields" style="display: none;">
+                    <div class="mb-3">
+                        <label for="certificate_file" class="form-label">Certificate File</label>
+                        <input type="file" class="form-control" id="certificate_file" name="certificate_file" accept=".pem,.crt,.cer">
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Select Validation Tests</label>
+                    <div class="row g-3">
+                        {% for validator in available_validators %}
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" 
+                                       name="validators" value="{{ validator }}" 
+                                       id="check_{{ validator }}">
+                                <label class="form-check-label" for="check_{{ validator }}">
+                                    {{ validator|title }} Validation
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary">Validate Certificate</button>
+                    {% if hostname and hostname != "file_upload" %}
+                    <a href="{{ url_for('server_security', hostname=hostname, port=port) }}" class="btn btn-info">View Server Security Dashboard</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </form>
+
+    {% if validation_results %}
+    <div class="mt-4">
+        <h2>Validation Results for {{ hostname }}</h2>
+        <div class="card">
+            <div class="card-body">
+                {% for test_name, result in validation_results.items() %}
+                <div class="alert {% if result.valid %}alert-success{% else %}alert-danger{% endif %} mb-2">
+                    <h5 class="alert-heading">{{ test_name|title }} Test</h5>
+                    <p class="mb-0">{{ result.message }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        {% if hostname and hostname != "file_upload" %}
+        <div class="mt-3 text-center">
+            <a href="{{ url_for('server_security', hostname=hostname, port=port) }}" class="btn btn-lg btn-success">
+                View Detailed Security Analysis
+            </a>
+        </div>
         {% endif %}
-    {% endfor %}
+    </div>
+    {% endif %}
 </div>
-{% endif %} {% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const hostnameRadio = document.getElementById('hostname');
+    const fileRadio = document.getElementById('file');
+    const hostnameFields = document.getElementById('hostnameFields');
+    const fileFields = document.getElementById('fileFields');
+
+    function toggleFields() {
+        if (hostnameRadio.checked) {
+            hostnameFields.style.display = 'block';
+            fileFields.style.display = 'none';
+        } else {
+            hostnameFields.style.display = 'none';
+            fileFields.style.display = 'block';
+        }
+    }
+
+    hostnameRadio.addEventListener('change', toggleFields);
+    fileRadio.addEventListener('change', toggleFields);
+});
+</script>
+{% endblock %}

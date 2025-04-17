@@ -1,0 +1,17 @@
+@startuml classes_UML-strategy-validator
+set namespaceSeparator none
+class "ValidationStrategy" as src.models.ValidationStrategy {
+  validators : list
+  validate_certificate(certificate) -> dict
+}
+class "ValidatorFactory" as src.models.ValidatorFactory {
+  create_validator(validator_type: str) -> ValidatorInterface
+  get_available_validators() -> list[str]
+}
+
+'strategy pattern core relationships'
+app.py ..> src.models.ValidatorFactory : uses
+app.py ..> src.models.ValidationStrategy : uses
+src.models.ValidationStrategy ..> src.models.ValidatorFactory : uses
+
+@enduml
