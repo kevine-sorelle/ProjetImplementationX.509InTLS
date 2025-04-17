@@ -2,8 +2,9 @@ from typing import Optional, Union
 from cryptography import x509
 import sys
 
-from src.services.EnsureCertificateObject import EnsureCertificateObject
+
 sys.path.append("src")
+from services.EnsureCertificateObject import EnsureCertificateObject
 from models.certificat import Certificat
 from strategy.SignatureStrategy import SignatureStrategy
 from cryptography.hazmat.primitives.asymmetric import ec
