@@ -13,6 +13,12 @@ logger = logging.getLogger(__name__)
 CACHE_DIR = "cache/issuer_certs"
 os.makedirs(CACHE_DIR, exist_ok=True)
 class IssuerCertificateFetcher:
+    _cache = {}
+
+    @classmethod
+    def reset_cache(cls):
+        """Clear the certificate cache"""
+        cls._cache.clear()
     """Fetch the issuer certificate from the certificate's AIA extension"""
     @staticmethod
     def get_issuer_certificate(cert: Union[Certificat, x509.Certificate, str]) -> Optional[x509.Certificate]:

@@ -1,7 +1,7 @@
 import sys
 sys.path.append("src")
-from adaptator.FileCertificateAdapter import FileCertificateAdapter
-from adaptator.HostnameCertificateAdapter import HostnameCertificateAdapter
+from src.adaptator.FileCertificateAdapter import FileCertificateAdapter
+from src.adaptator.HostnameCertificateAdapter import HostnameCertificateAdapter
 
 
 class CertificateAdapterFactory:
